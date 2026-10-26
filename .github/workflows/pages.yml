@@ -27,8 +27,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: "true"
-          # Apex custom domain: export with an empty basePath / assetPrefix.
-          CUSTOM_DOMAIN: zhengnian.win
+          # Subdomain is served from the host root, so basePath / assetPrefix stay empty.
+          CUSTOM_DOMAIN: tracker.zhengnian.win
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
