@@ -2,8 +2,14 @@ import type { NextConfig } from "next";
 
 const repository = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const onGitHubPages = process.env.GITHUB_PAGES === "true";
+// Custom domain (zhengnian.win) is served from the domain root. Project-site
+// deploys still use /<repo> unless CUSTOM_DOMAIN is set in the Pages workflow.
+const customDomain = (process.env.CUSTOM_DOMAIN ?? "").trim().length > 0;
 const basePath =
-  onGitHubPages && repository.length > 0 && !repository.endsWith(".github.io")
+  onGitHubPages &&
+  !customDomain &&
+  repository.length > 0 &&
+  !repository.endsWith(".github.io")
     ? `/${repository}`
     : "";
 
