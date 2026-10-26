@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const repository = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const onGitHubPages = process.env.GITHUB_PAGES === "true";
-// Custom domain (tracker.zhengnian.win) is served from the host root. Project-site
+// Custom domain (daily.zhengnian.win) is served from the host root. Project-site
 // deploys still use /<repo> unless CUSTOM_DOMAIN is set in the Pages workflow.
 const customDomain = (process.env.CUSTOM_DOMAIN ?? "").trim().length > 0;
 const basePath =

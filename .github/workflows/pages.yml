@@ -28,7 +28,7 @@ jobs:
         env:
           GITHUB_PAGES: "true"
           # Subdomain is served from the host root, so basePath / assetPrefix stay empty.
-          CUSTOM_DOMAIN: tracker.zhengnian.win
+          CUSTOM_DOMAIN: daily.zhengnian.win
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
