@@ -28,6 +28,8 @@ npm test
 
 資料寫在這台瀏覽器的 localStorage 裡，鍵名是 `rike.v1`。
 
+正 icon glyph: 教育部隸書 (TW-MOE-Li), 中華民國教育部, CC BY-ND 3.0 TW
+
 ## 放到 GitHub
 
 公開倉庫（public repository）可以用免費的 GitHub Pages。推上 `main` 之後，到倉庫的 Settings → Pages，Source 選 GitHub Actions。網址會是 `https://帳號.github.io/倉庫名/`。

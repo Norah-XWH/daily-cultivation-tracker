@@ -21,9 +21,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://daily.zhengnian.win"),
   title: "Daily Cultivation Tracker",
   description: "Align thoughts, conduct, and habits with 真-善-忍",
   applicationName: "Daily Cultivation Tracker",
+  appleWebApp: {
+    capable: true,
+    title: "Daily Cultivation Tracker",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    title: "Daily Cultivation Tracker",
+    description: "Align thoughts, conduct, and habits with 真-善-忍",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "正" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Daily Cultivation Tracker",
+    description: "Align thoughts, conduct, and habits with 真-善-忍",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {
