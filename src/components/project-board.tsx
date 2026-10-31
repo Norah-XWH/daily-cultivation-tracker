@@ -304,12 +304,12 @@ export function ProjectBoard({
         onDrop={onDrop}
       >
         <div className="grid grid-cols-2 gap-2">
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] px-3 text-sm font-medium text-[#123e3a]">
-            Add files
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] text-[#123e3a]" aria-label="Add files">
+            <AddFileIcon />
             <input className="sr-only" type="file" multiple onChange={onFileInput} />
           </label>
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] px-3 text-sm font-medium text-[#123e3a]">
-            Take photo
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] text-[#123e3a]" aria-label="Take photo">
+            <TakePhotoIcon />
             <input
               className="sr-only"
               type="file"
@@ -702,6 +702,40 @@ function PauseMark() {
   return (
     <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
       <path d="M5 3.5h2.2v9H5zM8.8 3.5H11v9H8.8z" fill="currentColor" />
+    </svg>
+  )
+}
+
+function AddFileIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-8" aria-hidden>
+      <path
+        d="M14 8h14l8 8v22a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <path d="M28 8v8h8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+      <path d="M16 24h12M16 30h8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="34" cy="34" r="8" fill="#F0E5CA" stroke="currentColor" strokeWidth="2.4" />
+      <path d="M34 30.5v7M30.5 34h7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TakePhotoIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-8" aria-hidden>
+      <path
+        d="M7 16.5h7.2l2.4-3.5h9.2l2.4 3.5H37a3 3 0 0 1 3 3V34a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3V19.5a3 3 0 0 1 3-3z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="22" cy="26.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2.4" />
+      <path d="M39 31v8M35 35h8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   )
 }
