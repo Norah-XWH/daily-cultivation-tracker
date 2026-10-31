@@ -322,7 +322,8 @@ function DayScreen({
         </button>
       ) : null}
       <div
-        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#e7f8f5]" : "bg-paper"}`}
+        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cover bg-center bg-no-repeat sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#f7f4ee]" : "bg-paper"}`}
+        style={view === "project" ? { backgroundImage: "url('/skill-background.png')" } : undefined}
       >
       <main
         className="min-h-0 flex-1 overflow-y-auto px-4"
@@ -600,7 +601,7 @@ function DayScreen({
         )}
       </main>
       <nav
-        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#e7f8f5]" : "bg-[#f7fffd]"}`}
+        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#f7f4ee]/70" : "bg-[#f7fffd]"}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="切換頁面"
       >
