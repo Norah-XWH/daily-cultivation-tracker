@@ -155,7 +155,7 @@ export function ProjectBoard({
 
   return (
     <div className="mt-1 flex flex-col gap-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-3 pb-6">
         <div className="min-w-0 flex-1">
           <p className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</p>
           <div className="relative mt-2 w-full">
@@ -656,7 +656,7 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
             strokeDasharray={`${progress} 100`}
           />
         </svg>
-        <span className="relative -translate-y-2 flex flex-col items-center">
+        <span className="relative flex flex-col items-center">
           <span className="text-sm font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
           <span className="mt-1 text-[9px] font-medium tracking-wide text-[#26867b]">{running ? "Pause" : "Start"}</span>
         </span>
@@ -666,7 +666,7 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         onClick={finish}
         disabled={elapsed <= 0}
         aria-label="Finish timer"
-        className="absolute bottom-1 left-1/2 grid size-5 -translate-x-1/2 place-items-center border-0 bg-transparent p-0 text-[#123e3a] disabled:opacity-25"
+        className="absolute top-full left-1/2 mt-1 grid size-5 -translate-x-1/2 place-items-center border-0 bg-transparent p-0 text-[#26867b] disabled:opacity-25"
       >
         <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
           <path
