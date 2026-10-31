@@ -77,11 +77,8 @@ function GuidedLine({ chars, shown }: { chars: string[]; shown: number }) {
   return (
     <span className="block">
       {chars.map((char, index) => (
-        <span key={`${char}-${index}`} className="relative">
-          <span className="text-[#0D0D0D]/28">{char}</span>
-          <span className={`absolute inset-0 text-[#0D0D0D] ${index < shown ? "opacity-100" : "opacity-0"}`} aria-hidden>
-            {char}
-          </span>
+        <span key={`${char}-${index}`} className={index < shown ? "text-[#0D0D0D]" : "text-[#0D0D0D]/28"}>
+          {char}
         </span>
       ))}
     </span>
