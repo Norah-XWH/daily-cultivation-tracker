@@ -411,9 +411,19 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         type="button"
         onClick={finish}
         disabled={elapsed <= 0}
-        className="mt-1 h-4 border-0 bg-transparent p-0 text-[10px] font-medium tracking-wide text-[#1E4E4E] disabled:text-transparent"
+        aria-label="Finish timer"
+        className="mt-1 grid size-5 place-items-center border-0 bg-transparent p-0 text-[#123e3a] disabled:opacity-25"
       >
-        Done
+        <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
+          <path
+            d="M3.2 8.4 6.4 11.5 12.8 4.8"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </div>
   )

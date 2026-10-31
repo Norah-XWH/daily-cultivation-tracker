@@ -338,7 +338,7 @@ function DayScreen({
               view === "day"
                 ? `font-zhen mt-2 text-[1.2rem] leading-snug font-bold text-[#123e3a]${mottoPop ? " invisible" : ""}`
                 : view === "project"
-                  ? "mt-1 flex items-start justify-between gap-3 text-[1.35rem] font-medium text-[#1E4E4E]"
+                  ? "mt-1 flex items-center justify-between gap-3"
                   : "mt-1 text-[1.35rem] font-medium text-[#123e3a]"
             }
           >
@@ -346,7 +346,7 @@ function DayScreen({
               "To-Do"
             ) : view === "project" ? (
               <>
-                <span className="pt-4">Architect</span>
+                <span className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</span>
                 <span className="flex items-start gap-3">
                   <ProjectClock
                     onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
@@ -607,7 +607,7 @@ function DayScreen({
             ["day", "今天", CalendarDays],
             ["readme", "ReadMe", BookOpen],
             ["todo", "待辦", ListChecks],
-            ["project", "400天", Timer],
+            ["project", "Skill", Timer],
           ] as const
         ).map(([id, label, Icon]) => {
           const active = view === id
