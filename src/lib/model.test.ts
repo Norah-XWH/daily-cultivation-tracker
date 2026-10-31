@@ -29,9 +29,10 @@ import type { Routine } from "./types"
 
 test("400 day countdown skips Sundays and ends on February 9 2028", () => {
   assert.deepEqual(countdownRemaining("2026-10-30"), { left: 400, total: 400 })
-  assert.deepEqual(countdownRemaining("2026-10-31"), { left: 400, total: 400 })
+  assert.deepEqual(countdownRemaining("2026-10-31"), { left: 399, total: 400 })
   assert.deepEqual(countdownRemaining("2026-11-01"), { left: 399, total: 400 })
-  assert.deepEqual(countdownRemaining("2028-02-09"), { left: 1, total: 400 })
+  assert.deepEqual(countdownRemaining("2026-11-02"), { left: 398, total: 400 })
+  assert.deepEqual(countdownRemaining("2028-02-09"), { left: 0, total: 400 })
   assert.deepEqual(countdownRemaining("2028-02-10"), { left: 0, total: 400 })
 })
 

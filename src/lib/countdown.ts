@@ -5,9 +5,10 @@ const END = "2028-02-09"
 
 export function countdownRemaining(today: string): { left: number; total: number } {
   const total = countNonSundays(START, END)
-  if (today <= START) return { left: total, total }
-  if (today > END) return { left: 0, total }
-  return { left: countNonSundays(today, END), total }
+  const from = addDays(today, 1)
+  const start = from < START ? START : from
+  if (start > END) return { left: 0, total }
+  return { left: countNonSundays(start, END), total }
 }
 
 function countNonSundays(start: string, end: string): number {
