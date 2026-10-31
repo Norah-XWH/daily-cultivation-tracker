@@ -172,6 +172,12 @@ body {
   font-style: normal;
 }
 
+.font-lishu {
+  font-family: "Baoli SC", "Libian SC", "STLibian", "LiSu", "STLiti", "华文隶书", "SimLi", "Songti SC", "Noto Serif CJK SC", serif;
+  font-size: 1.05rem;
+  line-height: 2rem;
+}
+
 @keyframes celebrate-pop {
   0% {
     opacity: 0;
