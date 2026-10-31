@@ -33,9 +33,27 @@ export function DailyTodo({
 }: DailyTodoProps) {
   const items = checklistFor(selected, log)
   const started = selected >= CHECKLIST_START
+  const [burst, setBurst] = useState<string | null>(null)
+  const burstTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (burstTimer.current != null) window.clearTimeout(burstTimer.current)
+    }
+  }, [])
+
+  function complete(id: string) {
+    const item = items?.find((entry) => entry.id === id)
+    onToggle(id)
+    if (!item || item.done) return
+    setBurst(id)
+    if (burstTimer.current != null) window.clearTimeout(burstTimer.current)
+    burstTimer.current = window.setTimeout(() => setBurst(null), 1100)
+  }
 
   return (
-    <section className="mt-4" aria-label="待辦">
+    <section className="relative mt-4" aria-label="待辦">
+      {burst ? <Celebration /> : null}
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -73,7 +91,7 @@ export function DailyTodo({
                 item={item}
                 index={index}
                 onTitle={onTitle}
-                onToggle={onToggle}
+                onToggle={complete}
                 onDelete={onDelete}
                 onMove={onMove}
                 canMoveUp={index > 0}
@@ -226,6 +244,34 @@ function TodoRow({
       </button>
       <GrowingNote value={item.title} label={label} onChange={(value) => onTitle(item.id, value)} />
     </li>
+  )
+}
+
+function Celebration() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-16 z-20 grid place-items-center" role="status">
+      <div className="relative grid size-24 place-items-center motion-reduce:animate-none" style={{ animation: "celebrate-pop 1100ms ease-out both" }}>
+        <span className="grid size-16 place-items-center rounded-full bg-[#fffaf3] text-[#123e3a] shadow-[0_12px_30px_rgba(18,62,58,0.18)]">
+          <svg viewBox="0 0 16 16" className="size-8" aria-hidden>
+            <path d="M3.2 8.4 6.4 11.5 12.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <Spark left="8%" top="18%" delay="0ms" />
+        <Spark left="78%" top="12%" delay="60ms" />
+        <Spark left="86%" top="62%" delay="90ms" />
+        <Spark left="6%" top="70%" delay="40ms" />
+        <span className="sr-only">完成</span>
+      </div>
+    </div>
+  )
+}
+
+function Spark({ left, top, delay }: { left: string; top: string; delay: string }) {
+  return (
+    <span
+      className="absolute size-2 rounded-full bg-[#e2b15a]"
+      style={{ left, top, animation: `celebrate-pop 1100ms ease-out ${delay} both` }}
+    />
   )
 }
 
