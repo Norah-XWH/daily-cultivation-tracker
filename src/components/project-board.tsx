@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react"
+import { Search } from "lucide-react"
 import { Circle } from "@/components/circle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -138,7 +139,17 @@ export function ProjectBoard({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
+    <div className="mt-3 flex flex-col gap-4">
+      <div className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-[#123e3a]/50" aria-hidden />
+        <Input
+          type="search"
+          value={query}
+          aria-label="Search stored links and files"
+          onValueChange={setQuery}
+          className="h-8 rounded-full border-[rgba(176,148,96,0.4)] bg-[#F9F2E1]/90 pr-3 pl-8 text-sm md:text-sm"
+        />
+      </div>
       <section aria-label="Direction" className={card}>
         <h2 className="text-sm font-medium">Where I am going</h2>
         <Textarea
@@ -188,16 +199,6 @@ export function ProjectBoard({
             </li>
           ))}
         </ul>
-      </section>
-
-      <section aria-label="Search" className={card}>
-        <h2 className="text-sm font-medium">Search</h2>
-        <Input
-          value={query}
-          aria-label="Search stored links and files"
-          onValueChange={setQuery}
-          className="mt-3 h-11 bg-white/70 text-base md:text-base"
-        />
       </section>
 
       <section aria-label="連結" className={card}>
