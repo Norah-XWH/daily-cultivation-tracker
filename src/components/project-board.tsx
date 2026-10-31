@@ -23,7 +23,7 @@ type ProjectBoardProps = {
   onDeleteFile: (id: string) => void
 }
 
-const card = "rounded-3xl border border-[rgba(38,134,123,0.28)] bg-[#d7f3ef] px-4 py-4 text-[#123e3a]"
+const card = "rounded-3xl border border-[rgba(176,148,96,0.4)] bg-[#F4E8C8] px-4 py-4 text-[#123e3a]"
 
 export function ProjectBoard({
   project,
@@ -160,13 +160,13 @@ export function ProjectBoard({
             onValueChange={setStepTitle}
             className="h-11 bg-white/70 text-base md:text-base"
           />
-          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] px-4 text-[#123e3a] hover:bg-[#b7e4de]" disabled={!stepTitle.trim()}>
+          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] px-4 text-[#123e3a] hover:bg-[#DCC89A]" disabled={!stepTitle.trim()}>
             Add
           </Button>
         </form>
         <ul className="mt-3 flex flex-col gap-2">
           {project.steps.map((step) => (
-            <li key={step.id} className="flex items-center gap-1 rounded-2xl bg-white/70 px-1 ring-1 ring-[rgba(38,134,123,0.22)]">
+            <li key={step.id} className="flex items-center gap-1 rounded-2xl bg-white/70 px-1 ring-1 ring-[rgba(176,148,96,0.35)]">
               <button
                 type="button"
                 className="grid size-11 shrink-0 place-items-center"
@@ -219,7 +219,7 @@ export function ProjectBoard({
               onValueChange={setLinkUrl}
               className="h-11 bg-white/70 text-base md:text-base"
             />
-            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] px-4 text-[#123e3a] hover:bg-[#b7e4de]" disabled={!linkUrl.trim()}>
+            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] px-4 text-[#123e3a] hover:bg-[#DCC89A]" disabled={!linkUrl.trim()}>
               Save
             </Button>
           </div>
@@ -234,7 +234,7 @@ export function ProjectBoard({
         ) : null}
         <ul className="mt-3 flex flex-col gap-2">
           {visibleLinks.map((link) => (
-            <li key={link.id} className="rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
+            <li key={link.id} className="rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(176,148,96,0.35)]">
               <a href={link.url} target="_blank" rel="noreferrer" className="block text-base font-medium break-words text-[#123e3a] underline">
                 {link.title || link.url}
               </a>
@@ -260,11 +260,11 @@ export function ProjectBoard({
       >
         <h2 className="text-sm font-medium">Files</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#c5ebe6] px-3 text-sm font-medium text-[#123e3a]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#E6D4A6] px-3 text-sm font-medium text-[#123e3a]">
             Add files
             <input className="sr-only" type="file" multiple onChange={onFileInput} />
           </label>
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#c5ebe6] px-3 text-sm font-medium text-[#123e3a]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#E6D4A6] px-3 text-sm font-medium text-[#123e3a]">
             Take photo
             <input
               className="sr-only"
@@ -285,12 +285,12 @@ export function ProjectBoard({
         ) : null}
         <ul className="mt-3 flex flex-col gap-2">
           {visibleFiles.map((file) => (
-            <li key={file.id} className="flex items-center gap-2 rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
+            <li key={file.id} className="flex items-center gap-2 rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(176,148,96,0.35)]">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base">{file.name}</p>
                 <p className="text-sm text-ink-soft tabular-nums">{formatBytes(file.size)}</p>
               </div>
-              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] text-[#123e3a] hover:bg-[#b7e4de]" onClick={() => void openFile(file)}>
+              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] text-[#123e3a] hover:bg-[#DCC89A]" onClick={() => void openFile(file)}>
                 打開
               </Button>
               <Button

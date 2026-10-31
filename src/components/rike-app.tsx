@@ -352,7 +352,7 @@ function DayScreen({
                   <ProjectClock
                     onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
                   />
-                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(38,134,123,0.35)] bg-white/55 text-[12px] font-normal tabular-nums text-[#123e3a]">
+                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(176,148,96,0.45)] bg-[#F4E8C8] text-[12px] font-normal tabular-nums text-[#123e3a]">
                     {Math.floor((store.project.bankMinutes ?? 0) / 60)}/500
                   </span>
                 </span>
