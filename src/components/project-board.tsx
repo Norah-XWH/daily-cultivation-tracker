@@ -171,22 +171,8 @@ export function ProjectBoard({
         </div>
         <div className="flex items-end gap-2">
           <ProjectClock onFinish={onFinish} />
-          <span className="relative grid size-24 shrink-0 place-items-center rounded-full bg-white/55 text-sm font-normal tabular-nums text-[#123e3a]">
-            <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
-              <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(38,134,123,0.4)" strokeWidth="1.6" />
-              <circle
-                cx="18"
-                cy="18"
-                r="15.2"
-                fill="none"
-                stroke="#26867b"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                pathLength="100"
-                strokeDasharray={`${Math.min(100, (Math.floor((project.bankMinutes ?? 0) / 60) / 500) * 100)} 100`}
-              />
-            </svg>
-            <span className="relative">{Math.floor((project.bankMinutes ?? 0) / 60)}/500</span>
+          <span className="grid size-24 shrink-0 place-items-center text-sm font-normal tabular-nums text-[#123e3a]">
+            {Math.floor((project.bankMinutes ?? 0) / 60)}/500
           </span>
         </div>
       </div>
@@ -542,7 +528,6 @@ function deepest(steps: ProjectStep[]): number {
 }
 
 const CLOCK_KEY = "rike.clock"
-const GOAL_SECONDS = 2 * 60 * 60
 
 function readClock(): { seconds: number; running: boolean; mark: number | null } {
   const idle = { seconds: 0, running: false, mark: null }
@@ -665,8 +650,6 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
     if (minutes > 0) onFinish(minutes)
   }
 
-  const progress = Math.min(100, (elapsed / GOAL_SECONDS) * 100)
-
   return (
     <div className="relative size-24 shrink-0">
       <button
@@ -675,22 +658,8 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         aria-pressed={running}
         aria-expanded={choosing}
         aria-label={running ? "Timer options" : paused ? "Resume timer" : "Start timer"}
-        className="relative grid size-24 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#123e3a]"
+        className="relative grid size-24 place-items-center border-0 bg-transparent p-0 text-[#123e3a]"
       >
-        <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
-          <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(38,134,123,0.4)" strokeWidth="1.6" />
-          <circle
-            cx="18"
-            cy="18"
-            r="15.2"
-            fill="none"
-            stroke="#26867b"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            pathLength="100"
-            strokeDasharray={`${progress} 100`}
-          />
-        </svg>
         {checkPop ? (
           <svg viewBox="0 0 16 16" className="relative size-10 text-[#26867b]" style={{ animation: "motto-burst 700ms ease-out" }} aria-hidden>
             <path d="M3.2 8.4 6.4 11.5 12.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
