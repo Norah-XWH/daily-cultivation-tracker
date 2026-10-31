@@ -40,6 +40,14 @@ export function ProjectBoard({
   const [linkTitle, setLinkTitle] = useState("")
   const [linkUrl, setLinkUrl] = useState("")
   const [linkError, setLinkError] = useState<string | null>(null)
+  const [query, setQuery] = useState("")
+  const needle = query.trim().toLowerCase()
+  const visibleLinks = needle
+    ? project.links.filter((link) => `${link.title}\n${link.url}`.toLowerCase().includes(needle))
+    : project.links
+  const visibleFiles = needle
+    ? project.files.filter((file) => file.name.toLowerCase().includes(needle))
+    : project.files
   const [stepTitle, setStepTitle] = useState("")
   const [fileError, setFileError] = useState<string | null>(null)
 
@@ -182,6 +190,16 @@ export function ProjectBoard({
         </ul>
       </section>
 
+      <section aria-label="Search" className={card}>
+        <h2 className="text-sm font-medium">Search</h2>
+        <Input
+          value={query}
+          aria-label="Search stored links and files"
+          onValueChange={setQuery}
+          className="mt-3 h-11 bg-white/70 text-base md:text-base"
+        />
+      </section>
+
       <section aria-label="連結" className={card}>
         <h2 className="text-sm font-medium">Links</h2>
         <form onSubmit={submitLink} className="mt-3 flex flex-col gap-2">
@@ -211,8 +229,11 @@ export function ProjectBoard({
             {linkError}
           </p>
         ) : null}
+        {needle && visibleLinks.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-soft">No link matches.</p>
+        ) : null}
         <ul className="mt-3 flex flex-col gap-2">
-          {project.links.map((link) => (
+          {visibleLinks.map((link) => (
             <li key={link.id} className="rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
               <a href={link.url} target="_blank" rel="noreferrer" className="block text-base font-medium break-words text-[#123e3a] underline">
                 {link.title || link.url}
@@ -259,8 +280,11 @@ export function ProjectBoard({
             {fileError}
           </p>
         ) : null}
+        {needle && visibleFiles.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-soft">No file matches.</p>
+        ) : null}
         <ul className="mt-3 flex flex-col gap-2">
-          {project.files.map((file) => (
+          {visibleFiles.map((file) => (
             <li key={file.id} className="flex items-center gap-2 rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base">{file.name}</p>
