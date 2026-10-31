@@ -80,8 +80,8 @@ export function ProjectBoard({
       }
       onAddFile({
         id,
-        name: file.name,
-        type: file.type,
+        name: file.name.trim() || `photo-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "")}.jpg`,
+        type: file.type || "image/jpeg",
         size: file.size,
         addedAt: new Date().toISOString(),
       })
@@ -238,10 +238,22 @@ export function ProjectBoard({
         onDrop={onDrop}
       >
         <h2 className="text-sm font-medium">Files</h2>
-        <label className="mt-3 flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[rgba(104,176,176,0.28)] px-4 text-sm font-medium text-[#1E4E4E]">
-          Add files
-          <input className="sr-only" type="file" multiple onChange={onFileInput} />
-        </label>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[rgba(104,176,176,0.28)] px-3 text-sm font-medium text-[#1E4E4E]">
+            Add files
+            <input className="sr-only" type="file" multiple onChange={onFileInput} />
+          </label>
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[rgba(104,176,176,0.28)] px-3 text-sm font-medium text-[#1E4E4E]">
+            Take photo
+            <input
+              className="sr-only"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={onFileInput}
+            />
+          </label>
+        </div>
         {fileError ? (
           <p role="alert" className="mt-2 text-sm text-destructive">
             {fileError}
