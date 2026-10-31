@@ -323,7 +323,7 @@ function DayScreen({
       ) : null}
       <div
         className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cover bg-center bg-no-repeat sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#f7f4ee]" : "bg-paper"}`}
-        style={view === "project" ? { backgroundImage: "url('/skill-background.png')" } : undefined}
+        style={view === "project" ? { backgroundImage: "url('/skill-background.png?v=2')" } : undefined}
       >
       <main
         className="min-h-0 flex-1 overflow-y-auto px-4"
