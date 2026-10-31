@@ -173,7 +173,7 @@ export function ProjectBoard({
           <ProjectClock onFinish={onFinish} />
           <span
             className="grid size-24 shrink-0 place-items-center bg-center bg-no-repeat text-sm font-normal tabular-nums text-[#123e3a]"
-            style={{ backgroundImage: "url('/skill-cloud.png')", backgroundSize: "168%" }}
+            style={{ backgroundImage: "url('/skill-cloud.png?v=3')", backgroundSize: "contain" }}
           >
             {Math.floor((project.bankMinutes ?? 0) / 60)}/500
           </span>
@@ -662,7 +662,7 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         aria-expanded={choosing}
         aria-label={running ? "Timer options" : paused ? "Resume timer" : "Start timer"}
         className="relative grid size-24 place-items-center border-0 bg-transparent bg-center bg-no-repeat p-0 text-[#123e3a]"
-        style={{ backgroundImage: "url('/skill-cloud.png')", backgroundSize: "168%" }}
+        style={{ backgroundImage: "url('/skill-cloud.png?v=3')", backgroundSize: "contain" }}
       >
         {checkPop ? (
           <svg viewBox="0 0 16 16" className="relative size-10 text-[#26867b]" style={{ animation: "motto-burst 700ms ease-out" }} aria-hidden>
