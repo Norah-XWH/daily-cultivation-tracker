@@ -143,9 +143,9 @@ export function ProjectBoard({
   return (
     <div className="mt-1 flex flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</p>
-          <div className="relative mt-2 w-32">
+          <div className="relative mt-2 w-full">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-[#123e3a]/50" aria-hidden />
             <Input
               type="search"
