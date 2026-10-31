@@ -14,6 +14,7 @@ const MAX_FILE_BYTES = 20 * 1024 * 1024
 
 type ProjectBoardProps = {
   project: Project
+  onFinish: (minutes: number) => void
   onNote: (note: string) => void
   onAddLink: (title: string, url: string) => boolean
   onDeleteLink: (id: string) => void
@@ -28,6 +29,7 @@ const card = "rounded-3xl border border-[rgba(176,148,96,0.4)] bg-[#F9F2E1] px-4
 
 export function ProjectBoard({
   project,
+  onFinish,
   onNote,
   onAddLink,
   onDeleteLink,
@@ -139,16 +141,27 @@ export function ProjectBoard({
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-4">
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-[#123e3a]/50" aria-hidden />
-        <Input
-          type="search"
-          value={query}
-          aria-label="Search stored links and files"
-          onValueChange={setQuery}
-          className="h-8 rounded-full border-[rgba(176,148,96,0.4)] bg-[#F9F2E1]/90 pr-3 pl-8 text-sm md:text-sm"
-        />
+    <div className="mt-1 flex flex-col gap-4">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</p>
+          <div className="relative mt-2 w-32">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-[#123e3a]/50" aria-hidden />
+            <Input
+              type="search"
+              value={query}
+              aria-label="Search stored links and files"
+              onValueChange={setQuery}
+              className="h-8 rounded-full border-[rgba(176,148,96,0.4)] bg-[#F9F2E1]/90 pr-2 pl-7 text-sm md:text-sm"
+            />
+          </div>
+        </div>
+        <div className="flex items-end gap-2">
+          <ProjectClock onFinish={onFinish} />
+          <span className="grid size-24 shrink-0 place-items-center border border-[rgba(176,148,96,0.45)] bg-[#F9F2E1] text-sm font-normal tabular-nums text-[#123e3a]">
+            {Math.floor((project.bankMinutes ?? 0) / 60)}/500
+          </span>
+        </div>
       </div>
       <section aria-label="Direction" className={card}>
         <h2 className="text-sm font-medium">Where I am going</h2>
@@ -417,13 +430,13 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
   const progress = Math.min(100, (elapsed / GOAL_SECONDS) * 100)
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="relative size-24 shrink-0">
       <button
         type="button"
         onClick={toggle}
         aria-pressed={running}
         aria-label={running ? "Pause timer" : "Start timer"}
-        className="relative grid size-16 shrink-0 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#123e3a]"
+        className="relative grid size-24 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#123e3a]"
       >
         <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
           <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(38,134,123,0.4)" strokeWidth="1.6" />
@@ -439,9 +452,9 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
             strokeDasharray={`${progress} 100`}
           />
         </svg>
-        <span className="relative flex flex-col items-center">
-          <span className="text-[11px] font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
-          <span className="mt-0.5 text-[8px] font-medium tracking-wide text-[#26867b]">{running ? "Pause" : "Start"}</span>
+        <span className="relative -translate-y-2 flex flex-col items-center">
+          <span className="text-sm font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
+          <span className="mt-1 text-[9px] font-medium tracking-wide text-[#26867b]">{running ? "Pause" : "Start"}</span>
         </span>
       </button>
       <button
@@ -449,7 +462,7 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         onClick={finish}
         disabled={elapsed <= 0}
         aria-label="Finish timer"
-        className="mt-1 grid size-5 place-items-center border-0 bg-transparent p-0 text-[#123e3a] disabled:opacity-25"
+        className="absolute bottom-1 left-1/2 grid size-5 -translate-x-1/2 place-items-center border-0 bg-transparent p-0 text-[#123e3a] disabled:opacity-25"
       >
         <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
           <path

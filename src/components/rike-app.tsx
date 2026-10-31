@@ -6,7 +6,7 @@ import { DailyTodo } from "@/components/daily-todo"
 import { PerformanceBars } from "@/components/history-view"
 import { ReadmePage } from "@/components/readme-page"
 import { Overview } from "@/components/overview"
-import { ProjectBoard, ProjectClock } from "@/components/project-board"
+import { ProjectBoard } from "@/components/project-board"
 import { RoutineCard } from "@/components/routine-card"
 import { RoutineEditor } from "@/components/routine-editor"
 import { Button } from "@/components/ui/button"
@@ -332,34 +332,16 @@ function DayScreen({
           paddingBottom: "1.25rem",
         }}
       >
-        {view === "readme" ? null : (
+        {view === "readme" || view === "project" ? null : (
         <header>
           <div
             className={
               view === "day"
                 ? `font-zhen mt-2 text-[1.2rem] leading-snug font-bold text-[#123e3a]${mottoPop ? " invisible" : ""}`
-                : view === "project"
-                  ? "mt-1 flex items-center justify-between gap-3"
-                  : "mt-1 text-[1.35rem] font-medium text-[#123e3a]"
+                : "mt-1 text-[1.35rem] font-medium text-[#123e3a]"
             }
           >
-            {view === "todo" ? (
-              "To-Do"
-            ) : view === "project" ? (
-              <>
-                <span className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</span>
-                <span className="flex items-start gap-3">
-                  <ProjectClock
-                    onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
-                  />
-                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(176,148,96,0.45)] bg-[#F9F2E1] text-[12px] font-normal tabular-nums text-[#123e3a]">
-                    {Math.floor((store.project.bankMinutes ?? 0) / 60)}/500
-                  </span>
-                </span>
-              </>
-            ) : (
-              "「事事對照，做到是修。」"
-            )}
+            {view === "todo" ? "To-Do" : "「事事對照，做到是修。」"}
           </div>
         </header>
         )}
@@ -378,6 +360,7 @@ function DayScreen({
         {view === "project" ? (
           <ProjectBoard
             project={store.project}
+            onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
             onNote={(note) => update((current) => setProjectNote(current, note))}
             onAddLink={(title, url) => {
               const next = addProjectLink(store, title, url)
