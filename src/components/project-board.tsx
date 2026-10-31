@@ -247,8 +247,7 @@ export function ProjectBoard({
       </section>
 
       <section aria-label="連結" className={card}>
-        <h2 className="text-sm font-medium">Links</h2>
-        <form onSubmit={submitLink} className="mt-3 flex flex-col gap-2">
+        <form onSubmit={submitLink} className="flex flex-col gap-2">
           <Input
             value={linkTitle}
             aria-label="連結名稱"
@@ -304,8 +303,7 @@ export function ProjectBoard({
         onDragOver={(event) => event.preventDefault()}
         onDrop={onDrop}
       >
-        <h2 className="text-sm font-medium">Files</h2>
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] px-3 text-sm font-medium text-[#123e3a]">
             Add files
             <input className="sr-only" type="file" multiple onChange={onFileInput} />
