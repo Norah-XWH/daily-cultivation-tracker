@@ -171,7 +171,7 @@ export function ProjectBoard({
         </div>
         <div className="flex items-end gap-2">
           <ProjectClock onFinish={onFinish} />
-          <span className="grid size-24 shrink-0 place-items-center border border-[rgba(176,148,96,0.45)] bg-[#F9F2E1] text-sm font-normal tabular-nums text-[#123e3a]">
+          <span className="grid size-24 shrink-0 place-items-center border-2 border-[#26867b] bg-white/55 text-sm font-normal tabular-nums text-[#123e3a]">
             {Math.floor((project.bankMinutes ?? 0) / 60)}/500
           </span>
         </div>
