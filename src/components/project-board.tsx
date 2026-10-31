@@ -171,7 +171,10 @@ export function ProjectBoard({
         </div>
         <div className="flex items-end gap-2">
           <ProjectClock onFinish={onFinish} />
-          <span className="grid size-24 shrink-0 place-items-center text-sm font-normal tabular-nums text-[#123e3a]">
+          <span
+            className="grid size-24 shrink-0 place-items-center bg-center bg-no-repeat text-sm font-normal tabular-nums text-[#123e3a]"
+            style={{ backgroundImage: "url('/skill-cloud.png')", backgroundSize: "168%" }}
+          >
             {Math.floor((project.bankMinutes ?? 0) / 60)}/500
           </span>
         </div>
@@ -658,7 +661,8 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         aria-pressed={running}
         aria-expanded={choosing}
         aria-label={running ? "Timer options" : paused ? "Resume timer" : "Start timer"}
-        className="relative grid size-24 place-items-center border-0 bg-transparent p-0 text-[#123e3a]"
+        className="relative grid size-24 place-items-center border-0 bg-transparent bg-center bg-no-repeat p-0 text-[#123e3a]"
+        style={{ backgroundImage: "url('/skill-cloud.png')", backgroundSize: "168%" }}
       >
         {checkPop ? (
           <svg viewBox="0 0 16 16" className="relative size-10 text-[#26867b]" style={{ animation: "motto-burst 700ms ease-out" }} aria-hidden>
