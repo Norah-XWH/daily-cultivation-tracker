@@ -23,7 +23,7 @@ type ProjectBoardProps = {
   onDeleteFile: (id: string) => void
 }
 
-const card = "rounded-3xl border border-[rgba(176,148,96,0.4)] bg-[#F4E8C8] px-4 py-4 text-[#123e3a]"
+const card = "rounded-3xl border border-[rgba(176,148,96,0.4)] bg-[#F9F2E1] px-4 py-4 text-[#123e3a]"
 
 export function ProjectBoard({
   project,
@@ -160,7 +160,7 @@ export function ProjectBoard({
             onValueChange={setStepTitle}
             className="h-11 bg-white/70 text-base md:text-base"
           />
-          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] px-4 text-[#123e3a] hover:bg-[#DCC89A]" disabled={!stepTitle.trim()}>
+          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#F0E5CA] px-4 text-[#123e3a] hover:bg-[#EADDC2]" disabled={!stepTitle.trim()}>
             Add
           </Button>
         </form>
@@ -219,7 +219,7 @@ export function ProjectBoard({
               onValueChange={setLinkUrl}
               className="h-11 bg-white/70 text-base md:text-base"
             />
-            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] px-4 text-[#123e3a] hover:bg-[#DCC89A]" disabled={!linkUrl.trim()}>
+            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#F0E5CA] px-4 text-[#123e3a] hover:bg-[#EADDC2]" disabled={!linkUrl.trim()}>
               Save
             </Button>
           </div>
@@ -260,11 +260,11 @@ export function ProjectBoard({
       >
         <h2 className="text-sm font-medium">Files</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#E6D4A6] px-3 text-sm font-medium text-[#123e3a]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] px-3 text-sm font-medium text-[#123e3a]">
             Add files
             <input className="sr-only" type="file" multiple onChange={onFileInput} />
           </label>
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#E6D4A6] px-3 text-sm font-medium text-[#123e3a]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#F0E5CA] px-3 text-sm font-medium text-[#123e3a]">
             Take photo
             <input
               className="sr-only"
@@ -290,7 +290,7 @@ export function ProjectBoard({
                 <p className="truncate text-base">{file.name}</p>
                 <p className="text-sm text-ink-soft tabular-nums">{formatBytes(file.size)}</p>
               </div>
-              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#E6D4A6] text-[#123e3a] hover:bg-[#DCC89A]" onClick={() => void openFile(file)}>
+              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(176,148,96,0.45)] bg-[#F0E5CA] text-[#123e3a] hover:bg-[#EADDC2]" onClick={() => void openFile(file)}>
                 打開
               </Button>
               <Button
