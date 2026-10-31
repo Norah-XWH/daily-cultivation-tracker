@@ -171,8 +171,22 @@ export function ProjectBoard({
         </div>
         <div className="flex items-end gap-2">
           <ProjectClock onFinish={onFinish} />
-          <span className="grid size-24 shrink-0 place-items-center border-2 border-[#26867b] bg-white/55 text-sm font-normal tabular-nums text-[#123e3a]">
-            {Math.floor((project.bankMinutes ?? 0) / 60)}/500
+          <span className="relative grid size-24 shrink-0 place-items-center rounded-full bg-white/55 text-sm font-normal tabular-nums text-[#123e3a]">
+            <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
+              <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(38,134,123,0.4)" strokeWidth="1.6" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.2"
+                fill="none"
+                stroke="#26867b"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                pathLength="100"
+                strokeDasharray={`${Math.min(100, (Math.floor((project.bankMinutes ?? 0) / 60) / 500) * 100)} 100`}
+              />
+            </svg>
+            <span className="relative">{Math.floor((project.bankMinutes ?? 0) / 60)}/500</span>
           </span>
         </div>
       </div>
