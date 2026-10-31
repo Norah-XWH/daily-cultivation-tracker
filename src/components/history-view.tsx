@@ -157,6 +157,43 @@ export function HistoryView({ routines, days, today, periodStart, onOpenDay }: H
   )
 }
 
+export function PerformanceBars({
+  routines,
+  days,
+  today,
+}: {
+  routines: Routine[]
+  days: Record<string, DayLog>
+  today: string
+}) {
+  const [span, setSpan] = useState<HistorySpan>("30")
+  const report = buildHistory(routines, days, today, span)
+  return (
+    <section className="mt-8" aria-label="一段時間">
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label="選擇一段時間">
+        {SPANS.map((item) => (
+          <Button
+            key={item.id}
+            type="button"
+            variant={span === item.id ? "default" : "outline"}
+            className="h-11"
+            aria-pressed={span === item.id}
+            onClick={() => setSpan(item.id)}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </div>
+      <TrendChart
+        points={report.points}
+        selected={null}
+        blankToday={report.todayCountsEmpty ? today : null}
+        onSelect={() => {}}
+      />
+    </section>
+  )
+}
+
 function Compare({ recent, previous }: { recent: number | null; previous: number | null }) {
   if (recent == null && previous == null) return null
   return (

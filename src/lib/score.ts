@@ -5,6 +5,20 @@ export function sortRoutines(routines: Routine[]): Routine[] {
   return [...routines].sort((a, b) => a.order - b.order)
 }
 
+const SCORED_IDS = new Set([
+  "exercise-1",
+  "exercise-2",
+  "exercise-3",
+  "exercise-4",
+  "exercise-5",
+  "fzn",
+  "read-fa",
+])
+
+export function scoredRoutines(routines: Routine[]): Routine[] {
+  return sortRoutines(routines).filter((routine) => SCORED_IDS.has(routine.id))
+}
+
 export function countedParts(routine: Routine): Part[] {
   return routine.parts.filter((part) => !part.optional)
 }
@@ -62,14 +76,14 @@ export function routineDone(routine: Routine, log: DayLog): boolean {
 }
 
 export function dayScore(routines: Routine[], log: DayLog): number {
-  const required = sortRoutines(routines).filter((routine) => routine.required)
+  const required = scoredRoutines(routines)
   if (required.length === 0) return 0
   const total = required.reduce((sum, routine) => sum + routineScore(routine, log), 0)
   return total / required.length
 }
 
 export function isCompleteDay(routines: Routine[], log: DayLog | undefined): boolean {
-  const required = routines.filter((routine) => routine.required && routine.mode !== "rating")
+  const required = scoredRoutines(routines)
   if (required.length === 0 || !log) return false
   return required.every((routine) => routineDone(routine, log))
 }

@@ -14,6 +14,7 @@ const basePath =
     : "";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   // Cursor opens this dev server through a preview host, not localhost.
   // Without this, Next.js blocks the page's styles and scripts, so the tab looks blank.
   allowedDevOrigins: ["127.0.0.1", "**.agent.cvm.dev", "**.trycloudflare.com"],

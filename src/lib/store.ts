@@ -1,8 +1,22 @@
 import { parseClock } from "@/lib/dates"
-import type { ColorId, DayLog, Part, Routine, Store, Todo } from "@/lib/types"
+import type {
+  CheckItem,
+  ColorId,
+  DayLog,
+  Part,
+  Project,
+  ProjectFile,
+  ProjectLink,
+  ProjectStep,
+  Routine,
+  Store,
+  Todo,
+} from "@/lib/types"
 import { isColorId } from "@/lib/types"
 
 export const STORAGE_KEY = "rike.v1"
+export const CHECKLIST_START = "2026-10-30"
+export const CHECKLIST_SLOTS = 5
 
 export const RATING_GROUPS = 3
 export const MAX_RATING_GROUPS = 24
@@ -147,20 +161,25 @@ export function createDefaultStore(): Store {
         detail: "",
         color: "sea",
         required: true,
-        completion: "all",
+        completion: "any",
         mode: "tasks",
         order: 6,
         parts: [
           checkPart("fa-lecture", "轉法輪", "1 Lecture"),
-          minutesPart("fa-hour", "各地講法", 60, { optional: true, caption: "約 1 小時" }),
+          checkPart("fa-hour", "各地講法", "約 1 小時"),
         ],
       },
-      cultivateRoutine(),
     ],
     todos: [],
     days: {},
     periodStart: null,
+    project: emptyProject(),
+    journal: {},
   }
+}
+
+export function emptyProject(): Project {
+  return { note: "", links: [], files: [], steps: [], hours: {}, bankMinutes: 0 }
 }
 
 export function startNewPeriod(store: Store, today: string): Store {
@@ -288,6 +307,158 @@ export function setRatingNote(
     current[index] = note.slice(0, 500)
     return { ...log, ratingNotes: { ...(log.ratingNotes ?? {}), [routineId]: current } }
   })
+}
+
+export function checklistFor(date: string, log: DayLog): CheckItem[] | null {
+  if (date < CHECKLIST_START) return null
+  if (log.checklist) return log.checklist
+  return Array.from({ length: CHECKLIST_SLOTS }, (_, index) => ({
+    id: `todo-${date}-${index + 1}`,
+    title: "",
+    done: false,
+  }))
+}
+
+function withChecklist(
+  store: Store,
+  date: string,
+  change: (items: CheckItem[]) => CheckItem[],
+): Store {
+  if (date < CHECKLIST_START) return store
+  return writeDay(store, date, (log) => ({
+    ...log,
+    checklist: change(checklistFor(date, log) ?? []),
+  }))
+}
+
+export function setChecklistTitle(store: Store, date: string, id: string, title: string): Store {
+  return withChecklist(store, date, (items) =>
+    items.map((item) => (item.id === id ? { ...item, title: title.slice(0, 4000) } : item)),
+  )
+}
+
+export function toggleChecklistItem(store: Store, date: string, id: string): Store {
+  return withChecklist(store, date, (items) =>
+    items.map((item) => (item.id === id ? { ...item, done: !item.done } : item)),
+  )
+}
+
+export function addChecklistItem(store: Store, date: string): Store {
+  return withChecklist(store, date, (items) => [
+    ...items,
+    { id: uid(), title: "", done: false },
+  ])
+}
+
+export function deleteChecklistItem(store: Store, date: string, id: string): Store {
+  return withChecklist(store, date, (items) => items.filter((item) => item.id !== id))
+}
+
+export function moveChecklistItem(store: Store, date: string, id: string, direction: -1 | 1): Store {
+  return withChecklist(store, date, (items) => {
+    const index = items.findIndex((item) => item.id === id)
+    const target = index + direction
+    if (index < 0 || target < 0 || target >= items.length) return items
+    const next = [...items]
+    const current = next[index]
+    const neighbor = next[target]
+    if (!current || !neighbor) return items
+    next[index] = neighbor
+    next[target] = current
+    return next
+  })
+}
+
+export function setJournal(store: Store, date: string, note: string): Store {
+  return { ...store, journal: { ...store.journal, [date]: note.slice(0, 8000) } }
+}
+
+export function setProjectMinutes(store: Store, date: string, minutes: number): Store {
+  const safe = Math.max(0, Math.min(24 * 60, Math.round(minutes)))
+  return {
+    ...store,
+    project: { ...store.project, hours: { ...store.project.hours, [date]: safe } },
+  }
+}
+
+export function finishProjectTimer(store: Store, date: string, minutes: number): Store {
+  const add = Math.max(0, Math.round(minutes))
+  if (add <= 0) return store
+  const day = Math.min(24 * 60, (store.project.hours[date] ?? 0) + add)
+  return {
+    ...store,
+    project: {
+      ...store.project,
+      bankMinutes: (store.project.bankMinutes ?? 0) + add,
+      hours: { ...store.project.hours, [date]: day },
+    },
+  }
+}
+
+export function setProjectNote(store: Store, note: string): Store {
+  return { ...store, project: { ...store.project, note: note.slice(0, 4000) } }
+}
+
+export function addProjectLink(store: Store, title: string, url: string): Store | null {
+  const href = url.trim()
+  const withScheme = /^https?:\/\//i.test(href) ? href : `https://${href}`
+  let parsed: URL
+  try {
+    parsed = new URL(withScheme)
+  } catch {
+    return null
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null
+  const link: ProjectLink = {
+    id: uid(),
+    title: title.trim().slice(0, 140) || parsed.hostname,
+    url: parsed.toString().slice(0, 2000),
+  }
+  return { ...store, project: { ...store.project, links: [link, ...store.project.links] } }
+}
+
+export function deleteProjectLink(store: Store, id: string): Store {
+  return {
+    ...store,
+    project: { ...store.project, links: store.project.links.filter((link) => link.id !== id) },
+  }
+}
+
+export function addProjectStep(store: Store, title: string): Store {
+  const trimmed = title.trim().slice(0, 140)
+  if (!trimmed) return store
+  const step: ProjectStep = { id: uid(), title: trimmed, done: false }
+  return { ...store, project: { ...store.project, steps: [...store.project.steps, step] } }
+}
+
+export function toggleProjectStep(store: Store, id: string): Store {
+  return {
+    ...store,
+    project: {
+      ...store.project,
+      steps: store.project.steps.map((step) =>
+        step.id === id ? { ...step, done: !step.done } : step,
+      ),
+    },
+  }
+}
+
+export function deleteProjectStep(store: Store, id: string): Store {
+  return {
+    ...store,
+    project: { ...store.project, steps: store.project.steps.filter((step) => step.id !== id) },
+  }
+}
+
+export function addProjectFile(store: Store, file: ProjectFile): Store {
+  return { ...store, project: { ...store.project, files: [file, ...store.project.files] } }
+}
+
+export function deleteProjectFile(store: Store, id: string): Store {
+  return {
+    ...store,
+    project: { ...store.project, files: store.project.files.filter((file) => file.id !== id) },
+  }
 }
 
 export function setRoutineNote(store: Store, date: string, routineId: string, note: string): Store {
@@ -474,6 +645,16 @@ function numberRecord(input: unknown): Record<string, number> {
   return result
 }
 
+function normalizeJournal(input: unknown): Record<string, string> {
+  const raw = asRecord(input)
+  if (!raw) return {}
+  const result: Record<string, string> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key) && typeof value === "string") result[key] = value.slice(0, 8000)
+  }
+  return result
+}
+
 function stringRecord(input: unknown): Record<string, string> {
   const raw = asRecord(input)
   if (!raw) return {}
@@ -536,13 +717,32 @@ function normalizeLog(input: unknown): DayLog {
         .map((item) => (typeof item === "string" ? item.slice(0, 500) : ""))
     }
   }
+  const checklist = normalizeChecklist(raw.checklist)
   return {
     checks,
     minutes: numberRecord(raw.minutes),
     notes: stringRecord(raw.notes),
     ratings,
     ratingNotes,
+    ...(checklist ? { checklist } : {}),
   }
+}
+
+function normalizeChecklist(input: unknown): CheckItem[] | undefined {
+  if (!Array.isArray(input)) return undefined
+  const seen = new Set<string>()
+  const items: CheckItem[] = []
+  for (const item of input.slice(0, 100)) {
+    const raw = asRecord(item)
+    if (!raw || typeof raw.id !== "string" || !raw.id || seen.has(raw.id)) continue
+    seen.add(raw.id)
+    items.push({
+      id: raw.id,
+      title: typeof raw.title === "string" ? raw.title.slice(0, 4000) : "",
+      done: raw.done === true,
+    })
+  }
+  return items
 }
 
 function normalizeTodo(input: unknown, seen: Set<string>): Todo | null {
@@ -586,16 +786,7 @@ export function normalizeStore(input: unknown): Store | null {
       if (/^\d{4}-\d{2}-\d{2}$/.test(key)) days[key] = normalizeLog(value)
     }
   }
-  const kept = routines
-    .filter((routine) => routine.id !== "hobby")
-    .map((routine) =>
-      routine.id === "cultivate" && routine.color === "rose" ? { ...routine, color: "teal" as const } : routine,
-    )
-  const incomingVersion = raw.version === 2 ? 2 : 1
-  if (incomingVersion === 1 && !kept.some((routine) => routine.id === "cultivate")) {
-    const order = kept.reduce((max, routine) => Math.max(max, routine.order), -1) + 1
-    kept.push({ ...cultivateRoutine(), order })
-  }
+  const kept = routines.filter((routine) => routine.id !== "hobby" && routine.id !== "cultivate")
   applyBuiltInShape(kept, days)
   for (const routine of kept) {
     if (routine.mode !== "rating") continue
@@ -614,7 +805,83 @@ export function normalizeStore(input: unknown): Store | null {
     typeof raw.periodStart === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.periodStart)
       ? raw.periodStart
       : null
-  return { version: 2, routines: kept, todos, days, periodStart }
+  return {
+    version: 2,
+    routines: kept,
+    todos,
+    days,
+    periodStart,
+    project: normalizeProject(raw.project),
+    journal: normalizeJournal(raw.journal),
+  }
+}
+
+function normalizeProject(input: unknown): Project {
+  const raw = asRecord(input)
+  if (!raw) return emptyProject()
+  const links: ProjectLink[] = []
+  const seenLinks = new Set<string>()
+  if (Array.isArray(raw.links)) {
+    for (const item of raw.links.slice(0, 200)) {
+      const link = asRecord(item)
+      if (!link || typeof link.id !== "string" || !link.id || seenLinks.has(link.id)) continue
+      if (typeof link.url !== "string" || !/^https?:\/\//i.test(link.url)) continue
+      seenLinks.add(link.id)
+      links.push({
+        id: link.id,
+        title: typeof link.title === "string" ? link.title.slice(0, 140) : "",
+        url: link.url.slice(0, 2000),
+      })
+    }
+  }
+  const files: ProjectFile[] = []
+  const seenFiles = new Set<string>()
+  if (Array.isArray(raw.files)) {
+    for (const item of raw.files.slice(0, 200)) {
+      const file = asRecord(item)
+      if (!file || typeof file.id !== "string" || !file.id || seenFiles.has(file.id)) continue
+      if (typeof file.name !== "string") continue
+      seenFiles.add(file.id)
+      files.push({
+        id: file.id,
+        name: file.name.slice(0, 180),
+        type: typeof file.type === "string" ? file.type.slice(0, 120) : "",
+        size: typeof file.size === "number" && Number.isFinite(file.size) ? Math.max(0, Math.round(file.size)) : 0,
+        addedAt: typeof file.addedAt === "string" ? file.addedAt : "1970-01-01T00:00:00.000Z",
+      })
+    }
+  }
+  const steps: ProjectStep[] = []
+  const seenSteps = new Set<string>()
+  if (Array.isArray(raw.steps)) {
+    for (const item of raw.steps.slice(0, 200)) {
+      const step = asRecord(item)
+      if (!step || typeof step.id !== "string" || !step.id || seenSteps.has(step.id)) continue
+      if (typeof step.title !== "string") continue
+      seenSteps.add(step.id)
+      steps.push({ id: step.id, title: step.title.slice(0, 140), done: step.done === true })
+    }
+  }
+  const hours: Record<string, number> = {}
+  const rawHours = asRecord(raw.hours)
+  if (rawHours) {
+    for (const [key, value] of Object.entries(rawHours)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || typeof value !== "number" || !Number.isFinite(value)) continue
+      hours[key] = Math.max(0, Math.min(24 * 60, Math.round(value)))
+    }
+  }
+  const bankMinutes =
+    typeof raw.bankMinutes === "number" && Number.isFinite(raw.bankMinutes)
+      ? Math.max(0, Math.round(raw.bankMinutes))
+      : 0
+  return {
+    note: typeof raw.note === "string" ? raw.note.slice(0, 4000) : "",
+    links,
+    files,
+    steps,
+    hours,
+    bankMinutes,
+  }
 }
 
 function visibleCaption(caption: string | null, fallback: string, hidden: string[]): string {
@@ -635,12 +902,12 @@ function applyBuiltInShape(routines: Routine[], days: Record<string, DayLog>) {
       routine.mode = "tasks"
     }
     if (routine.id !== "read-fa") continue
-    routine.completion = "all"
+    routine.completion = "any"
     routine.parts = routine.parts.map((part) => {
       if (part.id === "fa-lecture") {
         return {
           ...part,
-          kind: "check",
+          kind: "check" as const,
           label: part.label === "1 lecture" || part.label === "" ? "轉法輪" : part.label,
           targetMinutes: null,
           optional: false,
@@ -651,10 +918,10 @@ function applyBuiltInShape(routines: Routine[], days: Record<string, DayLog>) {
       if (part.id === "fa-hour") {
         return {
           ...part,
-          kind: "minutes",
+          kind: "check" as const,
           label: part.label === "1 hour" || part.label === "" ? "各地講法" : part.label,
-          targetMinutes: part.targetMinutes && part.targetMinutes > 0 ? part.targetMinutes : 60,
-          optional: true,
+          targetMinutes: null,
+          optional: false,
           choices: null,
           caption: visibleCaption(part.caption, "約 1 小時", ["可彈性", "可弹性"]),
         }
@@ -670,6 +937,10 @@ function applyBuiltInShape(routines: Routine[], days: Record<string, DayLog>) {
     const checks = { ...log.checks }
     delete checks["exercise-2-done"]
     log.checks = checks
+  }
+  for (const log of Object.values(days)) {
+    if ((log.minutes["fa-hour"] ?? 0) <= 0 || log.checks["fa-hour"]) continue
+    log.checks = { ...log.checks, "fa-hour": true }
   }
 }
 

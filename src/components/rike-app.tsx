@@ -1,12 +1,16 @@
 "use client"
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { HistoryView } from "@/components/history-view"
+import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, ListChecks, Timer } from "lucide-react"
+import { DailyTodo } from "@/components/daily-todo"
+import { PerformanceBars } from "@/components/history-view"
+import { ReadmePage } from "@/components/readme-page"
 import { Overview } from "@/components/overview"
+import { ProjectBoard, ProjectClock } from "@/components/project-board"
 import { RoutineCard } from "@/components/routine-card"
 import { RoutineEditor } from "@/components/routine-editor"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -18,11 +22,25 @@ import {
 import { addDays, formatLong, todayKey } from "@/lib/dates"
 import { sortRoutines } from "@/lib/score"
 import {
+  addChecklistItem,
+  addProjectFile,
+  addProjectLink,
+  addProjectStep,
   blankRoutine,
+  CHECKLIST_START,
   createDefaultStore,
+  deleteChecklistItem,
+  moveChecklistItem,
+  deleteProjectFile,
+  deleteProjectLink,
+  deleteProjectStep,
   deleteRoutine,
   getLog,
   addRatingGroup,
+  setChecklistTitle,
+  setJournal,
+  finishProjectTimer,
+  setProjectNote,
   setRatingNote,
   moveRoutine,
   normalizeStore,
@@ -32,6 +50,8 @@ import {
   startNewPeriod,
   STORAGE_KEY,
   toggleCheck,
+  toggleChecklistItem,
+  toggleProjectStep,
   upsertRoutine,
 } from "@/lib/store"
 import type { Routine, Store } from "@/lib/types"
@@ -217,14 +237,39 @@ function DayScreen({
   const editing = false
   const [draft, setDraft] = useState<Routine | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Routine | null>(null)
-  const [view, setView] = useState<"day" | "trend">("day")
+  const [view, setView] = useState<"day" | "readme" | "todo" | "project">("day")
+  const [todoDate, setTodoDate] = useState(today)
   const [mottoPop, setMottoPop] = useState(true)
   const [periodOpen, setPeriodOpen] = useState(false)
   const [trackedToday, setTrackedToday] = useState(today)
   if (trackedToday !== today) {
     setTrackedToday(today)
     setSelected((current) => (current === trackedToday ? today : current))
+    setTodoDate((current) => (current === trackedToday ? today : current))
   }
+
+  const shared = useRef(false)
+  useEffect(() => {
+    if (shared.current) return
+    shared.current = true
+    const params = new URLSearchParams(window.location.search)
+    const rawUrl = params.get("url")?.trim() ?? ""
+    const text = params.get("text")?.trim() ?? ""
+    const title = params.get("title")?.trim() ?? ""
+    const candidate = rawUrl || (/^https?:\/\//i.test(text) ? text : "")
+    if (!candidate && !text) return
+    if (candidate) {
+      const next = addProjectLink(store, title, candidate)
+      if (next) onChange(next)
+    } else {
+      const note = store.project.note.trim()
+      onChange(setProjectNote(store, note ? `${note}\n${text}` : text))
+    }
+    setView("project")
+    const clean = new URL(window.location.href)
+    clean.search = ""
+    window.history.replaceState(null, "", `${clean.pathname}${clean.hash}`)
+  }, [onChange, store])
 
   useEffect(() => {
     const tick = () => setNow(new Date())
@@ -239,7 +284,9 @@ function DayScreen({
     }
   }, [])
 
-  const routines = sortRoutines(store.routines)
+  const routines = sortRoutines(store.routines).filter(
+    (routine) => routine.id !== "cultivate" && routine.mode !== "rating",
+  )
   const log = getLog(store, selected)
 
   function update(change: (current: Store) => Store) {
@@ -259,72 +306,62 @@ function DayScreen({
   }
 
   return (
-    <div className="min-h-dvh bg-[#06110f]">
+    <div className="flex min-h-dvh justify-center bg-[#06110f]">
       {mottoPop ? (
         <button
           type="button"
           className="fixed inset-0 z-40 grid place-items-center border-0 bg-[#06110f]/55 p-6"
-          aria-label="Align thoughts, conduct, and habits with 真-善-忍"
+          aria-label="「事事對照，做到是修。」"
           onClick={() => setMottoPop(false)}
         >
-          <span className="animate-motto-pop font-oldstyle block max-w-[22rem] rounded-[1.75rem] bg-paper px-5 py-8 text-center text-[2.35rem] leading-[1.15] font-semibold text-[#123e3a] shadow-[0_28px_70px_rgba(6,17,15,0.45)] motion-reduce:animate-none">
-            Align thoughts, conduct, and habits with{" "}
-            <span className="font-zhen whitespace-nowrap">真-善-忍</span>
+          <span className="animate-motto-pop font-zhen block max-w-[22rem] rounded-[1.75rem] bg-paper px-8 py-8 text-center text-[2.6rem] leading-[1.35] font-semibold text-[#123e3a] shadow-[0_28px_70px_rgba(6,17,15,0.45)] motion-reduce:animate-none">
+            「事事對照，
+            <br />
+            做到是修。」
           </span>
         </button>
       ) : null}
+      <div
+        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#F4FAFA]" : "bg-paper"}`}
+      >
       <main
-        className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-paper px-4 pb-12"
+        className="min-h-0 flex-1 overflow-y-auto px-4"
         style={{
-          paddingTop: "max(1.25rem, env(safe-area-inset-top))",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 2.5rem)",
+          paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+          paddingBottom: "1.25rem",
         }}
       >
+        {view === "readme" ? null : (
         <header>
-          <h1 className="font-oldstyle text-[1.9rem] leading-none font-semibold text-[#123e3a]">
-            Daily Cultivation Tracker
-          </h1>
-          <p
+          <div
             className={
               view === "day"
-                ? `font-oldstyle mt-2 text-[1.05rem] leading-snug font-medium text-[#123e3a]${mottoPop ? " invisible" : ""}`
-                : "mt-1 text-sm text-ink-soft"
+                ? `font-zhen mt-2 text-[1.2rem] leading-snug font-bold text-[#123e3a]${mottoPop ? " invisible" : ""}`
+                : view === "project"
+                  ? "mt-1 flex items-start justify-between gap-3 text-[1.35rem] font-medium text-[#1E4E4E]"
+                  : "mt-1 text-[1.35rem] font-medium text-[#123e3a]"
             }
           >
-            {view === "day" ? (
+            {view === "todo" ? (
+              "To-Do"
+            ) : view === "project" ? (
               <>
-                Align thoughts, conduct, and habits with{" "}
-                <span className="font-zhen whitespace-nowrap">真-善-忍</span>
+                <span className="pt-4">Architect</span>
+                <span className="flex items-start gap-3">
+                  <ProjectClock
+                    onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
+                  />
+                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(104,176,176,0.45)] bg-white/50 text-[12px] font-normal tabular-nums text-[#1E4E4E]">
+                    {Math.floor((store.project.bankMinutes ?? 0) / 60)}/500
+                  </span>
+                </span>
               </>
             ) : (
-              "完成度怎麼變"
+              "「事事對照，做到是修。」"
             )}
-          </p>
+          </div>
         </header>
-
-        <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="切換頁面">
-          <button
-            type="button"
-            className="h-12 rounded-lg text-sm font-medium leading-tight"
-            aria-pressed={view === "day"}
-            style={viewTabStyle(view === "day")}
-            onClick={() => setView("day")}
-          >
-            <span className="block">今天</span>
-            <span className="block text-xs font-normal">Today</span>
-          </button>
-          <button
-            type="button"
-            className="h-12 rounded-lg text-sm font-medium leading-tight"
-            aria-pressed={view === "trend"}
-            data-testid="view-trend"
-            style={viewTabStyle(view === "trend")}
-            onClick={() => setView("trend")}
-          >
-            <span className="block">一段時間</span>
-            <span className="block text-xs font-normal">Over time</span>
-          </button>
-        </div>
+        )}
 
         {saveError ? (
           <p role="alert" className="mt-3 text-sm text-destructive">
@@ -337,17 +374,78 @@ function DayScreen({
           </p>
         ) : null}
 
-        {view === "trend" ? (
-          <HistoryView
-            routines={store.routines}
-            days={store.days}
-            today={today}
-            periodStart={store.periodStart}
-            onOpenDay={(date) => {
-              setSelected(date > today ? today : date)
-              setView("day")
+        {view === "project" ? (
+          <ProjectBoard
+            project={store.project}
+            onNote={(note) => update((current) => setProjectNote(current, note))}
+            onAddLink={(title, url) => {
+              const next = addProjectLink(store, title, url)
+              if (!next) return false
+              onChange(next)
+              return true
             }}
+            onDeleteLink={(id) => update((current) => deleteProjectLink(current, id))}
+            onAddStep={(title) => update((current) => addProjectStep(current, title))}
+            onToggleStep={(id) => update((current) => toggleProjectStep(current, id))}
+            onDeleteStep={(id) => update((current) => deleteProjectStep(current, id))}
+            onAddFile={(file) => update((current) => addProjectFile(current, file))}
+            onDeleteFile={(id) => update((current) => deleteProjectFile(current, id))}
           />
+        ) : view === "todo" ? (
+          <DailyTodo
+            today={today}
+            selected={todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate}
+            log={getLog(store, todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate)}
+            onSelect={setTodoDate}
+            onTitle={(id, title) =>
+              update((current) =>
+                setChecklistTitle(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  id,
+                  title,
+                ),
+              )
+            }
+            onToggle={(id) =>
+              update((current) =>
+                toggleChecklistItem(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  id,
+                ),
+              )
+            }
+            onAdd={() =>
+              update((current) =>
+                addChecklistItem(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                ),
+              )
+            }
+            onDelete={(id) =>
+              update((current) =>
+                deleteChecklistItem(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  id,
+                ),
+              )
+            }
+            onMove={(id, direction) =>
+              update((current) =>
+                moveChecklistItem(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  id,
+                  direction,
+                ),
+              )
+            }
+          />
+        ) : view === "readme" ? (
+          <ReadmePage />
         ) : (
           <>
         <div className="mt-4 flex items-center gap-2">
@@ -361,7 +459,7 @@ function DayScreen({
           >
             <ChevronLeft />
           </Button>
-          <p className="min-w-0 flex-1 text-center text-base font-medium">
+          <p className="min-w-0 flex-1 text-center text-base font-normal">
             {formatLong(selected)}
             {selected === today ? " · 今天" : ""}
           </p>
@@ -403,8 +501,8 @@ function DayScreen({
           />
         </div>
 
-        <section className="mt-8" aria-label="Routines">
-          <h2 className="text-sm font-medium">Routines</h2>
+        <section className="mt-8" aria-label="項目">
+          <h2 className="text-sm font-medium">項目</h2>
           {editing || routines.length === 0 ? (
             <Button type="button" variant="outline" className="mt-3 h-11 w-full" onClick={beginAdd}>
               加一項
@@ -451,6 +549,7 @@ function DayScreen({
           </>
         )}
 
+        {view === "day" ? (
         <section className="mt-10 border-t border-black/5 pt-4">
           <Button
             type="button"
@@ -462,7 +561,82 @@ function DayScreen({
             Start Anew
           </Button>
         </section>
+        ) : null}
+
+        {view === "day" ? (
+          <PerformanceBars routines={store.routines} days={store.days} today={today} />
+        ) : view === "todo" ? (
+        <section className="mt-10 border-t border-black/5 pt-4" aria-label="Memo">
+          <h2 className="text-sm font-medium">Memo</h2>
+          <MemoField
+            value={store.journal[todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate] ?? ""}
+            onChange={(value) =>
+              update((current) =>
+                setJournal(
+                  current,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  value,
+                ),
+              )
+            }
+          />
+        </section>
+        ) : view === "readme" ? null : (
+        <section className="mt-10 border-t border-black/5 pt-4" aria-label="日記">
+          <h2 className="text-sm font-medium">
+            日記 <span className="font-normal text-ink-soft">Journal</span>
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">{formatLong(today)}</p>
+          <Textarea
+            value={store.journal[today] ?? ""}
+            aria-label="今天的日記"
+            placeholder="今天想記下來的話"
+            onChange={(event) => update((current) => setJournal(current, today, event.target.value))}
+            className="mt-3 min-h-32 bg-white/70 text-base md:text-base"
+          />
+        </section>
+        )}
       </main>
+      <nav
+        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#F4FAFA]" : "bg-[#f7fffd]"}`}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        aria-label="切換頁面"
+      >
+        {(
+          [
+            ["day", "今天", CalendarDays],
+            ["readme", "ReadMe", BookOpen],
+            ["todo", "待辦", ListChecks],
+            ["project", "400天", Timer],
+          ] as const
+        ).map(([id, label, Icon]) => {
+          const active = view === id
+          return (
+            <button
+              key={id}
+              type="button"
+              className="flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+              aria-pressed={active}
+              data-testid={`view-${id}`}
+              style={{
+                color:
+                  view === "project"
+                    ? active
+                      ? "#1E4E4E"
+                      : "rgba(30,78,78,0.45)"
+                    : active
+                      ? "#123e3a"
+                      : "#3e6b64",
+              }}
+              onClick={() => setView(id)}
+            >
+              <Icon className="size-5" strokeWidth={active ? 2.4 : 1.8} />
+              <span>{label}</span>
+            </button>
+          )
+        })}
+      </nav>
+      </div>
 
       <RoutineEditor
         draft={draft}
@@ -530,10 +704,24 @@ function DayScreen({
   )
 }
 
-function viewTabStyle(active: boolean): { backgroundColor: string; color: string } {
-  return active
-    ? { backgroundColor: "#26867b", color: "#f4fffd" }
-    : { backgroundColor: "rgba(255,255,255,0.72)", color: "#123e3a" }
+function MemoField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    const field = ref.current
+    if (!field) return
+    field.style.height = "0px"
+    field.style.height = `${field.scrollHeight}px`
+  }, [value])
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      aria-label="Memo"
+      onChange={(event) => onChange(event.target.value)}
+      className="mt-3 min-h-16 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-[#cecebf] bg-[#EFEFEA] px-3 py-2 text-base leading-7 text-[#0D0D0D] outline-none"
+    />
+  )
 }
 
 function Skeleton() {

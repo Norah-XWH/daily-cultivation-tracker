@@ -7,7 +7,7 @@ import {
   isCompleteDay,
   routineDone,
   routineScore,
-  sortRoutines,
+  scoredRoutines,
   completionStreak,
 } from "@/lib/score"
 import { emptyLog } from "@/lib/store"
@@ -36,7 +36,7 @@ export function Overview({
   onSelect,
   onFocusRoutine,
 }: OverviewProps) {
-  const required = sortRoutines(routines).filter((routine) => routine.required)
+  const required = scoredRoutines(routines)
   const recorded = selected === today || hasActivity(log)
   const score = required.length === 0 || !recorded ? 0 : dayScore(routines, log)
   const percent = Math.round(score * 100)

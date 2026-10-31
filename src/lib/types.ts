@@ -110,12 +110,48 @@ export type Todo = {
   completedAt: string | null
 }
 
+export type CheckItem = {
+  id: string
+  title: string
+  done: boolean
+}
+
 export type DayLog = {
   checks: Record<string, boolean>
   minutes: Record<string, number>
   notes: Record<string, string>
   ratings: Record<string, Array<number | null>>
   ratingNotes: Record<string, string[]>
+  checklist?: CheckItem[]
+}
+
+export type ProjectLink = {
+  id: string
+  title: string
+  url: string
+}
+
+export type ProjectFile = {
+  id: string
+  name: string
+  type: string
+  size: number
+  addedAt: string
+}
+
+export type ProjectStep = {
+  id: string
+  title: string
+  done: boolean
+}
+
+export type Project = {
+  note: string
+  links: ProjectLink[]
+  files: ProjectFile[]
+  steps: ProjectStep[]
+  hours: Record<string, number>
+  bankMinutes: number
 }
 
 export type Store = {
@@ -124,4 +160,6 @@ export type Store = {
   todos: Todo[]
   days: Record<string, DayLog>
   periodStart: string | null
+  project: Project
+  journal: Record<string, string>
 }

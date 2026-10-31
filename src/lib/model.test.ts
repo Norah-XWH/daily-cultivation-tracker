@@ -17,6 +17,7 @@ import {
   addRatingGroup,
   setRating,
   setMinutes,
+  finishProjectTimer,
   startNewPeriod,
   toggleCheck,
   validateRoutine,
@@ -49,7 +50,6 @@ test("default routines match the daily list", () => {
       "Exercise 5: meditation",
       "FZN",
       "Read FA",
-      "Have you seized every opportunity to really cultivate?",
     ],
   )
   const fzn = store.routines.find((routine) => routine.name === "FZN")
@@ -64,18 +64,15 @@ test("default routines match the daily list", () => {
     ],
   )
   const reading = store.routines.find((routine) => routine.name === "Read FA")
-  assert.equal(reading?.completion, "all")
+  assert.equal(reading?.completion, "any")
   assert.equal(reading?.parts.find((part) => part.id === "fa-lecture")?.label, "轉法輪")
-  assert.equal(reading?.parts.find((part) => part.id === "fa-lecture")?.optional, false)
+  assert.equal(reading?.parts.find((part) => part.id === "fa-lecture")?.kind, "check")
   assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.label, "各地講法")
-  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.optional, true)
+  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.kind, "check")
+  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.optional, false)
   const second = store.routines.find((routine) => routine.id === "exercise-2")
   assert.deepEqual(second?.parts[0]?.choices, [30, 60])
-  const question = store.routines.find((routine) => routine.id === "cultivate")
-  assert.equal(question?.name, "Have you seized every opportunity to really cultivate?")
-  assert.equal(question?.mode, "rating")
-  assert.equal(question?.color, "teal")
-  assert.equal(question?.parts.length, 0)
+  assert.equal(store.routines.some((routine) => routine.id === "cultivate"), false)
   assert.equal(store.routines.some((routine) => routine.id === "hobby"), false)
 })
 
@@ -105,7 +102,7 @@ test("scores partial work and either-or routines", () => {
   log.checks["fzn-2"] = true
   assert.equal(routineScore(fzn, log), 0.5)
   assert.equal(routineDone(fzn, log), false)
-  assert.equal(dayScore(store.routines, log), 0.5 / 8)
+  assert.equal(dayScore(store.routines, log), 0.5 / 7)
 
   const reading = store.routines.find((routine) => routine.id === "read-fa")
   assert.ok(reading)
@@ -113,18 +110,16 @@ test("scores partial work and either-or routines", () => {
   lectureLog.checks["fa-lecture"] = true
   assert.equal(routineDone(reading, lectureLog), true)
   assert.equal(routineScore(reading, lectureLog), 1)
-  const partialRead = emptyLog()
-  partialRead.minutes["fa-hour"] = 30
-  assert.equal(routineScore(reading, partialRead), 0)
-  assert.equal(routineDone(reading, partialRead), false)
-  const fullRead = emptyLog()
-  fullRead.minutes["fa-hour"] = 60
-  assert.equal(routineDone(reading, fullRead), false)
+  const localOnly = emptyLog()
+  localOnly.checks["fa-hour"] = true
+  assert.equal(routineDone(reading, localOnly), true)
+  assert.equal(routineScore(reading, localOnly), 1)
   const both = emptyLog()
   both.checks["fa-lecture"] = true
-  both.minutes["fa-hour"] = 15
+  both.checks["fa-hour"] = true
   assert.equal(routineScore(reading, both), 1)
   assert.equal(routineDone(reading, both), true)
+  assert.equal(routineDone(reading, emptyLog()), false)
 
   const second = store.routines.find((routine) => routine.id === "exercise-2")
   assert.ok(second)
@@ -141,8 +136,17 @@ test("scores partial work and either-or routines", () => {
 
 test("several ratings average into a degree, not a finished check", () => {
   const store = createDefaultStore()
-  const question = store.routines.find((routine) => routine.id === "cultivate")
-  assert.ok(question)
+  const question = {
+    id: "cultivate",
+    name: "old question",
+    detail: "",
+    color: "teal" as const,
+    required: false,
+    completion: "all" as const,
+    mode: "rating" as const,
+    order: 0,
+    parts: [],
+  }
   const empty = emptyLog()
   assert.equal(routineScore(question, empty), 0)
   assert.equal(routineDone(question, empty), false)
@@ -205,7 +209,7 @@ test("a fully checked day is complete", () => {
   store = setRating(store, date, "cultivate", 0, 40)
   const log = store.days[date] ?? emptyLog()
   assert.equal(isCompleteDay(store.routines, log), true)
-  assert.ok(dayScore(store.routines, log) < 1)
+  assert.equal(dayScore(store.routines, log), 1)
 })
 
 test("time cue follows the clock", () => {
@@ -275,17 +279,8 @@ test("an older list drops Hobby and keeps a removed question removed", () => {
   const next = normalizeStore(older)
   assert.equal(next?.version, 2)
   assert.equal(next?.routines.some((routine) => routine.id === "hobby"), false)
-  assert.equal(
-    next?.routines.find((routine) => routine.id === "cultivate")?.name,
-    "Have you seized every opportunity to really cultivate?",
-  )
+  assert.equal(next?.routines.some((routine) => routine.id === "cultivate"), false)
   assert.ok(next)
-  const removed = normalizeStore({
-    ...next,
-    routines: next.routines.filter((routine) => routine.id !== "cultivate"),
-  })
-  assert.equal(removed?.routines.some((routine) => routine.id === "cultivate"), false)
-  assert.equal(next?.routines.find((routine) => routine.id === "cultivate")?.mode, "rating")
 
   const checked = normalizeStore({
     version: 2,
@@ -319,8 +314,7 @@ test("an older list drops Hobby and keeps a removed question removed", () => {
       },
     },
   })
-  assert.equal(checked?.routines[0]?.parts.length, 0)
-  assert.equal(checked?.routines[0]?.color, "teal")
+  assert.equal(checked?.routines.length, 0)
   assert.deepEqual(checked?.days["2026-10-14"]?.ratings.cultivate, [100])
   assert.equal(checked?.days["2026-10-14"]?.checks["cultivate-done"], undefined)
 
@@ -343,7 +337,7 @@ test("an older list drops Hobby and keeps a removed question removed", () => {
 test("normalize keeps a backup and rejects an unknown version", () => {
   const store = createDefaultStore()
   const restored = normalizeStore(JSON.parse(JSON.stringify(store)))
-  assert.equal(restored?.routines.length, 8)
+  assert.equal(restored?.routines.length, 7)
   assert.equal(normalizeStore({ version: 3, routines: [] }), null)
   assert.equal(normalizeStore({ hello: true }), null)
 })
@@ -414,10 +408,12 @@ test("older Exercise 2 and Read FA keep their finished days", () => {
   assert.deepEqual(second?.parts[0]?.choices, [30, 60])
   assert.equal(next?.days["2026-10-12"]?.minutes["exercise-2-time"], 30)
   assert.equal(next?.days["2026-10-12"]?.checks["exercise-2-done"], undefined)
-  assert.equal(reading?.completion, "all")
-  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.optional, true)
+  assert.equal(reading?.completion, "any")
+  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.kind, "check")
+  assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.optional, false)
   assert.equal(reading?.parts.find((part) => part.id === "fa-hour")?.label, "各地講法")
   const log = next?.days["2026-10-12"] ?? emptyLog()
+  assert.equal(log.checks["fa-hour"], true)
   assert.equal(routineDone(reading!, log), true)
   assert.equal(routineDone(second!, log), true)
 })
@@ -439,6 +435,22 @@ test("a new period keeps old days and restarts the streak", () => {
   assert.equal(restored?.periodStart, "2026-10-14")
   assert.equal(restored?.days["2026-10-12"]?.checks["exercise-1-done"], true)
   assert.equal(normalizeStore(createDefaultStore())?.periodStart, null)
+})
+
+test("a finished timer adds its hours toward 500", () => {
+  const store = createDefaultStore()
+  assert.equal(store.project.bankMinutes, 0)
+  const twoHours = finishProjectTimer(store, "2026-10-30", 120)
+  assert.equal(twoHours.project.bankMinutes, 120)
+  assert.equal(Math.floor(twoHours.project.bankMinutes / 60), 2)
+  assert.equal(twoHours.project.hours["2026-10-30"], 120)
+  const again = finishProjectTimer(twoHours, "2026-10-31", 60)
+  assert.equal(again.project.bankMinutes, 180)
+  assert.equal(again.project.hours["2026-10-30"], 120)
+  assert.equal(again.project.hours["2026-10-31"], 60)
+  const kept = normalizeStore(JSON.parse(JSON.stringify({ ...again, project: { note: again.project.note, links: [], files: [], steps: [], hours: again.project.hours } })))
+  assert.equal(kept?.project.bankMinutes, 0)
+  assert.equal(kept?.project.hours["2026-10-31"], 60)
 })
 
 test("normalize drops a routine whose parts are empty", () => {

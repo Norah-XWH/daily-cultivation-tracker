@@ -272,7 +272,16 @@ function ComplexBody({
 }: RoutineCardProps & { done: boolean; ink: string }) {
   const counted = countedParts(routine)
   const doneParts = counted.filter((part) => partDone(part, log)).length
-  const status = done ? "已完成" : counted.length > 1 ? `${doneParts}/${counted.length}` : "未完成"
+  const status =
+    !done &&
+    counted.length <= 1 &&
+    (routine.id === "exercise-2" || routine.id === "read-fa")
+      ? ""
+      : done
+        ? "已完成"
+        : counted.length > 1
+          ? `${doneParts}/${counted.length}`
+          : "未完成"
   return (
     <div>
       <header className="flex items-start justify-between gap-3 py-1">

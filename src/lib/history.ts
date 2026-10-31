@@ -1,5 +1,5 @@
 import { addDays, parseKey, recentDates } from "@/lib/dates"
-import { dayScore, hasActivity, isCompleteDay, routineRating, routineScore, sortRoutines } from "@/lib/score"
+import { dayScore, hasActivity, isCompleteDay, routineRating, routineScore, scoredRoutines } from "@/lib/score"
 import { emptyLog } from "@/lib/store"
 import type { ColorId, DayLog, Routine } from "@/lib/types"
 
@@ -75,7 +75,7 @@ function pointFor(
   routines: Routine[],
   days: Record<string, DayLog>,
 ): HistoryPoint {
-  const required = routines.some((routine) => routine.required)
+  const required = scoredRoutines(routines).length > 0
   const log = days[date]
   const counted = required && (date === today || (log != null && hasActivity(log)))
   return {
@@ -136,9 +136,7 @@ export function buildHistory(
   const points = dates.map((date) => pointFor(date, today, routines, days))
   const todayLog = days[today]
   const todayPoint = points.find((point) => point.date === today)
-  const routineTrends: RoutineTrend[] = sortRoutines(routines)
-    .filter((routine) => routine.required)
-    .map((routine) => {
+  const routineTrends: RoutineTrend[] = scoredRoutines(routines).map((routine) => {
       if (routine.mode === "rating") {
         const ratings = dates.flatMap((date) => {
           const log = days[date]
