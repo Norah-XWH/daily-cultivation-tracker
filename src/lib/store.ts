@@ -424,30 +424,52 @@ export function deleteProjectLink(store: Store, id: string): Store {
   }
 }
 
-export function addProjectStep(store: Store, title: string): Store {
+const MAX_STEP_DEPTH = 5
+
+function toggleInSteps(steps: ProjectStep[], id: string): ProjectStep[] {
+  return steps.map((step) =>
+    step.id === id ? { ...step, done: !step.done } : { ...step, substeps: toggleInSteps(step.substeps, id) },
+  )
+}
+
+function deleteInSteps(steps: ProjectStep[], id: string): ProjectStep[] {
+  return steps
+    .filter((step) => step.id !== id)
+    .map((step) => ({ ...step, substeps: deleteInSteps(step.substeps, id) }))
+}
+
+function addInSteps(steps: ProjectStep[], parentId: string, child: ProjectStep, depth: number): { steps: ProjectStep[]; placed: boolean } {
+  let placed = false
+  const next = steps.map((step) => {
+    if (step.id === parentId && depth < MAX_STEP_DEPTH) {
+      placed = true
+      return { ...step, substeps: [...step.substeps, child] }
+    }
+    const nested = addInSteps(step.substeps, parentId, child, depth + 1)
+    if (nested.placed) placed = true
+    return { ...step, substeps: nested.steps }
+  })
+  return { steps: next, placed }
+}
+
+export function addProjectStep(store: Store, title: string, parentId?: string): Store {
   const trimmed = title.trim().slice(0, 140)
   if (!trimmed) return store
-  const step: ProjectStep = { id: uid(), title: trimmed, done: false }
-  return { ...store, project: { ...store.project, steps: [...store.project.steps, step] } }
+  const step: ProjectStep = { id: uid(), title: trimmed, done: false, substeps: [] }
+  if (!parentId) {
+    return { ...store, project: { ...store.project, steps: [...store.project.steps, step] } }
+  }
+  const nested = addInSteps(store.project.steps, parentId, step, 1)
+  if (!nested.placed) return store
+  return { ...store, project: { ...store.project, steps: nested.steps } }
 }
 
 export function toggleProjectStep(store: Store, id: string): Store {
-  return {
-    ...store,
-    project: {
-      ...store.project,
-      steps: store.project.steps.map((step) =>
-        step.id === id ? { ...step, done: !step.done } : step,
-      ),
-    },
-  }
+  return { ...store, project: { ...store.project, steps: toggleInSteps(store.project.steps, id) } }
 }
 
 export function deleteProjectStep(store: Store, id: string): Store {
-  return {
-    ...store,
-    project: { ...store.project, steps: store.project.steps.filter((step) => step.id !== id) },
-  }
+  return { ...store, project: { ...store.project, steps: deleteInSteps(store.project.steps, id) } }
 }
 
 export function addProjectFile(store: Store, file: ProjectFile): Store {
@@ -851,17 +873,7 @@ function normalizeProject(input: unknown): Project {
       })
     }
   }
-  const steps: ProjectStep[] = []
-  const seenSteps = new Set<string>()
-  if (Array.isArray(raw.steps)) {
-    for (const item of raw.steps.slice(0, 200)) {
-      const step = asRecord(item)
-      if (!step || typeof step.id !== "string" || !step.id || seenSteps.has(step.id)) continue
-      if (typeof step.title !== "string") continue
-      seenSteps.add(step.id)
-      steps.push({ id: step.id, title: step.title.slice(0, 140), done: step.done === true })
-    }
-  }
+  const steps = normalizeSteps(raw.steps, new Set<string>(), 1)
   const hours: Record<string, number> = {}
   const rawHours = asRecord(raw.hours)
   if (rawHours) {
@@ -882,6 +894,24 @@ function normalizeProject(input: unknown): Project {
     hours,
     bankMinutes,
   }
+}
+
+function normalizeSteps(input: unknown, seen: Set<string>, depth: number): ProjectStep[] {
+  if (!Array.isArray(input) || depth > MAX_STEP_DEPTH) return []
+  const steps: ProjectStep[] = []
+  for (const item of input.slice(0, 80)) {
+    const step = asRecord(item)
+    if (!step || typeof step.id !== "string" || !step.id || seen.has(step.id)) continue
+    if (typeof step.title !== "string") continue
+    seen.add(step.id)
+    steps.push({
+      id: step.id,
+      title: step.title.slice(0, 140),
+      done: step.done === true,
+      substeps: normalizeSteps(step.substeps, seen, depth + 1),
+    })
+  }
+  return steps
 }
 
 function visibleCaption(caption: string | null, fallback: string, hidden: string[]): string {

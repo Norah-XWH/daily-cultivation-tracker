@@ -369,7 +369,7 @@ function DayScreen({
               return true
             }}
             onDeleteLink={(id) => update((current) => deleteProjectLink(current, id))}
-            onAddStep={(title) => update((current) => addProjectStep(current, title))}
+            onAddStep={(title, parentId) => update((current) => addProjectStep(current, title, parentId))}
             onToggleStep={(id) => update((current) => toggleProjectStep(current, id))}
             onDeleteStep={(id) => update((current) => deleteProjectStep(current, id))}
             onAddFile={(file) => update((current) => addProjectFile(current, file))}

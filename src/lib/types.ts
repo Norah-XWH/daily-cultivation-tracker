@@ -143,6 +143,7 @@ export type ProjectStep = {
   id: string
   title: string
   done: boolean
+  substeps: ProjectStep[]
 }
 
 export type Project = {

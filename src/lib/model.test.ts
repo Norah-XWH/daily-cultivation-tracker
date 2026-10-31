@@ -17,7 +17,9 @@ import {
   addRatingGroup,
   setRating,
   setMinutes,
+  addProjectStep,
   finishProjectTimer,
+  toggleProjectStep,
   startNewPeriod,
   toggleCheck,
   validateRoutine,
@@ -451,6 +453,29 @@ test("a finished timer adds its hours toward 500", () => {
   const kept = normalizeStore(JSON.parse(JSON.stringify({ ...again, project: { note: again.project.note, links: [], files: [], steps: [], hours: again.project.hours } })))
   assert.equal(kept?.project.bankMinutes, 0)
   assert.equal(kept?.project.hours["2026-10-31"], 60)
+})
+
+test("a step can hold substeps", () => {
+  let store = addProjectStep(createDefaultStore(), "Read")
+  const parent = store.project.steps[0]?.id ?? ""
+  store = addProjectStep(store, "Chapter 1", parent)
+  store = addProjectStep(store, "Notes", parent)
+  assert.equal(store.project.steps[0]?.substeps.length, 2)
+  const child = store.project.steps[0]?.substeps[0]?.id ?? ""
+  store = toggleProjectStep(store, child)
+  assert.equal(store.project.steps[0]?.substeps[0]?.done, true)
+  assert.equal(store.project.steps[0]?.done, false)
+  const restored = normalizeStore(store)
+  assert.equal(restored?.project.steps[0]?.substeps.map((step) => step.title).join(","), "Chapter 1,Notes")
+  const legacy = normalizeStore({
+    version: 2,
+    routines: [],
+    todos: [],
+    days: {},
+    project: { note: "", links: [], files: [], steps: [{ id: "old", title: "Old", done: false }], hours: {} },
+    journal: {},
+  })
+  assert.deepEqual(legacy?.project.steps[0]?.substeps, [])
 })
 
 test("normalize drops a routine whose parts are empty", () => {
