@@ -583,14 +583,16 @@ function DayScreen({
         </section>
         ) : view === "readme" ? null : (
         <section className="mt-10 border-t border-black/5 pt-4" aria-label="日記">
-          <h2 className="text-sm font-medium">
-            日記 <span className="font-normal text-ink-soft">Journal</span>
+          <h2 className="flex items-center gap-3 text-sm font-medium">
+            <span>
+              日記 <span className="font-normal text-ink-soft">Journal</span>
+            </span>
+            <span className="h-4 w-px shrink-0 bg-[#123e3a]/35" aria-hidden />
+            <span className="font-normal text-ink-soft">{formatLong(today)}</span>
           </h2>
-          <p className="mt-1 text-sm text-ink-soft">{formatLong(today)}</p>
           <Textarea
             value={store.journal[today] ?? ""}
             aria-label="今天的日記"
-            placeholder="今天想記下來的話"
             onChange={(event) => update((current) => setJournal(current, today, event.target.value))}
             className="mt-3 min-h-32 bg-white/70 text-base md:text-base"
           />
