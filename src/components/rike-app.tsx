@@ -322,7 +322,7 @@ function DayScreen({
         </button>
       ) : null}
       <div
-        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#F4FAFA]" : "bg-paper"}`}
+        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#e7f8f5]" : "bg-paper"}`}
       >
       <main
         className="min-h-0 flex-1 overflow-y-auto px-4"
@@ -351,7 +351,7 @@ function DayScreen({
                   <ProjectClock
                     onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
                   />
-                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(104,176,176,0.45)] bg-white/50 text-[12px] font-normal tabular-nums text-[#1E4E4E]">
+                  <span className="grid size-16 shrink-0 place-items-center border border-[rgba(38,134,123,0.35)] bg-white/55 text-[12px] font-normal tabular-nums text-[#123e3a]">
                     {Math.floor((store.project.bankMinutes ?? 0) / 60)}/500
                   </span>
                 </span>
@@ -598,7 +598,7 @@ function DayScreen({
         )}
       </main>
       <nav
-        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#F4FAFA]" : "bg-[#f7fffd]"}`}
+        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#e7f8f5]" : "bg-[#f7fffd]"}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="切換頁面"
       >
@@ -622,8 +622,8 @@ function DayScreen({
                 color:
                   view === "project"
                     ? active
-                      ? "#1E4E4E"
-                      : "rgba(30,78,78,0.45)"
+                      ? "#123e3a"
+                      : "#3e6b64"
                     : active
                       ? "#123e3a"
                       : "#3e6b64",

@@ -23,7 +23,7 @@ type ProjectBoardProps = {
   onDeleteFile: (id: string) => void
 }
 
-const card = "rounded-3xl border border-[rgba(104,176,176,0.32)] bg-[rgba(104,176,176,0.14)] px-4 py-4 text-[#1E4E4E]"
+const card = "rounded-3xl border border-[rgba(38,134,123,0.28)] bg-[#d7f3ef] px-4 py-4 text-[#123e3a]"
 
 export function ProjectBoard({
   project,
@@ -137,7 +137,7 @@ export function ProjectBoard({
           value={project.note}
           aria-label="Where I am going"
           onChange={(event) => onNote(event.target.value)}
-          className="mt-3 min-h-20 border-transparent bg-white/60 text-base text-[#1E4E4E] md:text-base"
+          className="mt-3 min-h-20 border-transparent bg-white/60 text-base text-[#123e3a] md:text-base"
         />
       </section>
 
@@ -152,13 +152,13 @@ export function ProjectBoard({
             onValueChange={setStepTitle}
             className="h-11 bg-white/70 text-base md:text-base"
           />
-          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(104,176,176,0.45)] bg-[rgba(104,176,176,0.28)] px-4 text-[#1E4E4E] hover:bg-[rgba(104,176,176,0.4)]" disabled={!stepTitle.trim()}>
+          <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] px-4 text-[#123e3a] hover:bg-[#b7e4de]" disabled={!stepTitle.trim()}>
             Add
           </Button>
         </form>
         <ul className="mt-3 flex flex-col gap-2">
           {project.steps.map((step) => (
-            <li key={step.id} className="flex items-center gap-1 rounded-2xl bg-white/55 px-1 ring-1 ring-[rgba(104,176,176,0.28)]">
+            <li key={step.id} className="flex items-center gap-1 rounded-2xl bg-white/70 px-1 ring-1 ring-[rgba(38,134,123,0.22)]">
               <button
                 type="button"
                 className="grid size-11 shrink-0 place-items-center"
@@ -166,7 +166,7 @@ export function ProjectBoard({
                 aria-label={step.done ? `標為未完成 ${step.title}` : `完成 ${step.title}`}
                 onClick={() => onToggleStep(step.id)}
               >
-                <Circle on={step.done} ink="#68B0B0" />
+                <Circle on={step.done} ink="#26867b" />
               </button>
               <span className="min-w-0 flex-1 py-2 text-base break-words">{step.title}</span>
               <Button
@@ -201,7 +201,7 @@ export function ProjectBoard({
               onValueChange={setLinkUrl}
               className="h-11 bg-white/70 text-base md:text-base"
             />
-            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(104,176,176,0.45)] bg-[rgba(104,176,176,0.28)] px-4 text-[#1E4E4E] hover:bg-[rgba(104,176,176,0.4)]" disabled={!linkUrl.trim()}>
+            <Button type="submit" variant="outline" className="h-11 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] px-4 text-[#123e3a] hover:bg-[#b7e4de]" disabled={!linkUrl.trim()}>
               Save
             </Button>
           </div>
@@ -213,8 +213,8 @@ export function ProjectBoard({
         ) : null}
         <ul className="mt-3 flex flex-col gap-2">
           {project.links.map((link) => (
-            <li key={link.id} className="rounded-2xl bg-white/55 px-3 py-2 ring-1 ring-[rgba(104,176,176,0.28)]">
-              <a href={link.url} target="_blank" rel="noreferrer" className="block text-base font-medium break-words text-[#1E4E4E] underline">
+            <li key={link.id} className="rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
+              <a href={link.url} target="_blank" rel="noreferrer" className="block text-base font-medium break-words text-[#123e3a] underline">
                 {link.title || link.url}
               </a>
               <p className="mt-0.5 truncate text-sm text-ink-soft">{link.url}</p>
@@ -239,11 +239,11 @@ export function ProjectBoard({
       >
         <h2 className="text-sm font-medium">Files</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[rgba(104,176,176,0.28)] px-3 text-sm font-medium text-[#1E4E4E]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#c5ebe6] px-3 text-sm font-medium text-[#123e3a]">
             Add files
             <input className="sr-only" type="file" multiple onChange={onFileInput} />
           </label>
-          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[rgba(104,176,176,0.28)] px-3 text-sm font-medium text-[#1E4E4E]">
+          <label className="flex h-11 cursor-pointer items-center justify-center rounded-lg bg-[#c5ebe6] px-3 text-sm font-medium text-[#123e3a]">
             Take photo
             <input
               className="sr-only"
@@ -261,12 +261,12 @@ export function ProjectBoard({
         ) : null}
         <ul className="mt-3 flex flex-col gap-2">
           {project.files.map((file) => (
-            <li key={file.id} className="flex items-center gap-2 rounded-2xl bg-white/55 px-3 py-2 ring-1 ring-[rgba(104,176,176,0.28)]">
+            <li key={file.id} className="flex items-center gap-2 rounded-2xl bg-white/70 px-3 py-2 ring-1 ring-[rgba(38,134,123,0.22)]">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base">{file.name}</p>
                 <p className="text-sm text-ink-soft tabular-nums">{formatBytes(file.size)}</p>
               </div>
-              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(104,176,176,0.45)] bg-[rgba(104,176,176,0.28)] text-[#1E4E4E] hover:bg-[rgba(104,176,176,0.4)]" onClick={() => void openFile(file)}>
+              <Button type="button" variant="outline" className="h-10 shrink-0 border-[rgba(38,134,123,0.35)] bg-[#c5ebe6] text-[#123e3a] hover:bg-[#b7e4de]" onClick={() => void openFile(file)}>
                 打開
               </Button>
               <Button
@@ -398,16 +398,16 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         onClick={toggle}
         aria-pressed={running}
         aria-label={running ? "Pause timer" : "Start timer"}
-        className="relative grid size-16 shrink-0 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#1E4E4E]"
+        className="relative grid size-16 shrink-0 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#123e3a]"
       >
         <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
-          <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(104,176,176,0.35)" strokeWidth="1.6" />
+          <circle cx="18" cy="18" r="15.2" fill="none" stroke="rgba(38,134,123,0.4)" strokeWidth="1.6" />
           <circle
             cx="18"
             cy="18"
             r="15.2"
             fill="none"
-            stroke="#68B0B0"
+            stroke="#26867b"
             strokeWidth="1.6"
             strokeLinecap="round"
             pathLength="100"
@@ -416,7 +416,7 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
         </svg>
         <span className="relative flex flex-col items-center">
           <span className="text-[11px] font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
-          <span className="mt-0.5 text-[8px] font-medium tracking-wide text-[#68B0B0]">{running ? "Pause" : "Start"}</span>
+          <span className="mt-0.5 text-[8px] font-medium tracking-wide text-[#26867b]">{running ? "Pause" : "Start"}</span>
         </span>
       </button>
       <button
