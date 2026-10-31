@@ -155,7 +155,7 @@ export function ProjectBoard({
 
   return (
     <div className="mt-1 flex flex-col gap-4">
-      <div className="flex items-end justify-between gap-3 pb-6">
+      <div className="flex items-end justify-between gap-3 pb-9">
         <div className="min-w-0 flex-1">
           <p className="font-sans text-[1.35rem] font-medium leading-snug text-[#123e3a]">Build A Skill</p>
           <div className="relative mt-2 w-full">
@@ -578,6 +578,9 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
   const runningRef = useRef(restored.running)
   const [running, setRunning] = useState(restored.running)
   const [elapsed, setElapsed] = useState(restored.seconds)
+  const [choosing, setChoosing] = useState(false)
+  const [paused, setPaused] = useState(!restored.running && restored.seconds > 0)
+  const [checkPop, setCheckPop] = useState(false)
 
   function currentSeconds() {
     if (!runningRef.current || markRef.current == null) return baseRef.current
@@ -613,20 +616,33 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
     }
   }, [])
 
-  function toggle() {
+  function onClockClick() {
+    if (checkPop) return
+    if (runningRef.current) {
+      setChoosing((open) => !open)
+      return
+    }
     const seconds = currentSeconds()
     baseRef.current = seconds
-    if (runningRef.current) {
-      markRef.current = null
-      runningRef.current = false
-      setRunning(false)
-    } else {
-      markRef.current = Date.now()
-      runningRef.current = true
-      setRunning(true)
-    }
+    markRef.current = Date.now()
+    runningRef.current = true
+    setChoosing(false)
+    setPaused(false)
+    setRunning(true)
     setElapsed(seconds)
-    writeClock(baseRef.current, runningRef.current, markRef.current)
+    writeClock(baseRef.current, true, markRef.current)
+  }
+
+  function pause() {
+    const seconds = currentSeconds()
+    baseRef.current = seconds
+    markRef.current = null
+    runningRef.current = false
+    setRunning(false)
+    setPaused(true)
+    setChoosing(false)
+    setElapsed(seconds)
+    writeClock(seconds, false, null)
   }
 
   function finish() {
@@ -635,7 +651,11 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
     markRef.current = null
     runningRef.current = false
     setRunning(false)
+    setPaused(false)
+    setChoosing(false)
     setElapsed(0)
+    setCheckPop(true)
+    window.setTimeout(() => setCheckPop(false), 800)
     try {
       sessionStorage.removeItem(CLOCK_KEY)
     } catch {
@@ -651,9 +671,10 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
     <div className="relative size-24 shrink-0">
       <button
         type="button"
-        onClick={toggle}
+        onClick={onClockClick}
         aria-pressed={running}
-        aria-label={running ? "Pause timer" : "Start timer"}
+        aria-expanded={choosing}
+        aria-label={running ? "Timer options" : paused ? "Resume timer" : "Start timer"}
         className="relative grid size-24 place-items-center rounded-full border-0 bg-white/55 p-0 text-[#123e3a]"
       >
         <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden>
@@ -670,30 +691,55 @@ export function ProjectClock({ onFinish }: { onFinish: (minutes: number) => void
             strokeDasharray={`${progress} 100`}
           />
         </svg>
-        <span className="relative flex flex-col items-center">
-          <span className="text-sm font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
-          <span className="mt-1 text-[9px] font-medium tracking-wide text-[#26867b]">{running ? "Pause" : "Start"}</span>
+        {checkPop ? (
+          <svg viewBox="0 0 16 16" className="relative size-10 text-[#26867b]" style={{ animation: "motto-burst 700ms ease-out" }} aria-hidden>
+            <path d="M3.2 8.4 6.4 11.5 12.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : (
+          <span className="relative text-sm font-medium tabular-nums leading-none">{formatClock(elapsed)}</span>
+        )}
+      </button>
+      {choosing ? (
+        <div className="absolute top-full left-1/2 mt-1 flex -translate-x-1/2 gap-2">
+          <button
+            type="button"
+            aria-label="Pause"
+            onClick={pause}
+            className="grid size-7 place-items-center rounded-full border border-[#26867b] bg-white/80 text-[#26867b]"
+          >
+            <PauseMark />
+          </button>
+          <button
+            type="button"
+            aria-label="Done"
+            onClick={finish}
+            className="grid size-7 place-items-center rounded-full border border-[#26867b] bg-white/80 text-[#26867b]"
+          >
+            <CheckMark />
+          </button>
+        </div>
+      ) : paused ? (
+        <span className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[#26867b]" aria-hidden>
+          <PauseMark />
         </span>
-      </button>
-      <button
-        type="button"
-        onClick={finish}
-        disabled={elapsed <= 0}
-        aria-label="Finish timer"
-        className="absolute top-full left-1/2 mt-1 grid size-5 -translate-x-1/2 place-items-center border-0 bg-transparent p-0 text-[#26867b] disabled:opacity-25"
-      >
-        <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
-          <path
-            d="M3.2 8.4 6.4 11.5 12.8 4.8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+      ) : null}
     </div>
+  )
+}
+
+function PauseMark() {
+  return (
+    <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
+      <path d="M5 3.5h2.2v9H5zM8.8 3.5H11v9H8.8z" fill="currentColor" />
+    </svg>
+  )
+}
+
+function CheckMark() {
+  return (
+    <svg viewBox="0 0 16 16" className="size-4" aria-hidden>
+      <path d="M3.2 8.4 6.4 11.5 12.8 4.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
 
