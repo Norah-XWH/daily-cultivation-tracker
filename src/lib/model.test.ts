@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { countdownRemaining } from "./countdown"
 import { addDays, formatClockRange, formatLong } from "./dates"
 import {
   completionStreak,
@@ -25,6 +26,14 @@ import {
   validateRoutine,
 } from "./store"
 import type { Routine } from "./types"
+
+test("400 day countdown skips Sundays and ends on February 9 2028", () => {
+  assert.deepEqual(countdownRemaining("2026-10-30"), { left: 400, total: 400 })
+  assert.deepEqual(countdownRemaining("2026-10-31"), { left: 400, total: 400 })
+  assert.deepEqual(countdownRemaining("2026-11-01"), { left: 399, total: 400 })
+  assert.deepEqual(countdownRemaining("2028-02-09"), { left: 1, total: 400 })
+  assert.deepEqual(countdownRemaining("2028-02-10"), { left: 0, total: 400 })
+})
 
 test("calendar helpers stay on local dates", () => {
   assert.equal(addDays("2026-10-01", -1), "2026-09-30")

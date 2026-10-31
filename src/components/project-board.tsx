@@ -6,6 +6,7 @@ import { Circle } from "@/components/circle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { countdownRemaining } from "@/lib/countdown"
 import { deleteProjectBlob, loadProjectBlob, saveProjectBlob } from "@/lib/project-files"
 import { uid } from "@/lib/store"
 import type { Project, ProjectFile, ProjectStep } from "@/lib/types"
@@ -13,6 +14,7 @@ import type { Project, ProjectFile, ProjectStep } from "@/lib/types"
 const MAX_FILE_BYTES = 20 * 1024 * 1024
 
 type ProjectBoardProps = {
+  today: string
   project: Project
   onFinish: (minutes: number) => void
   onNote: (note: string) => void
@@ -28,6 +30,7 @@ type ProjectBoardProps = {
 const card = "rounded-3xl border border-[rgba(176,148,96,0.4)] bg-[#F9F2E1] px-4 py-4 text-[#123e3a]"
 
 export function ProjectBoard({
+  today,
   project,
   onFinish,
   onNote,
@@ -169,14 +172,19 @@ export function ProjectBoard({
             />
           </div>
         </div>
-        <div className="flex items-end gap-2">
-          <ProjectClock onFinish={onFinish} />
-          <span
-            className="grid size-24 shrink-0 place-items-center bg-center bg-no-repeat text-sm font-bold tabular-nums text-[#123e3a]"
-            style={{ backgroundImage: "url('/skill-cloud.png?v=5')", backgroundSize: "contain" }}
-          >
-            {Math.floor((project.bankMinutes ?? 0) / 60)}/500
-          </span>
+        <div className="relative">
+          <div className="flex items-end gap-2">
+            <ProjectClock onFinish={onFinish} />
+            <span
+              className="grid size-24 shrink-0 place-items-center bg-center bg-no-repeat text-sm font-bold tabular-nums text-[#123e3a]"
+              style={{ backgroundImage: "url('/skill-cloud.png?v=5')", backgroundSize: "contain" }}
+            >
+              {Math.floor((project.bankMinutes ?? 0) / 60)}/500
+            </span>
+          </div>
+          <p className="absolute top-full right-0 left-0 mt-1 text-center text-[11px] leading-none font-normal tabular-nums text-[#123e3a]">
+            {countdownRemaining(today).left}/{countdownRemaining(today).total}
+          </p>
         </div>
       </div>
       <section aria-label="Direction" className={card}>

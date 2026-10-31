@@ -359,6 +359,7 @@ function DayScreen({
 
         {view === "project" ? (
           <ProjectBoard
+            today={today}
             project={store.project}
             onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
             onNote={(note) => update((current) => setProjectNote(current, note))}
@@ -378,14 +379,14 @@ function DayScreen({
         ) : view === "todo" ? (
           <DailyTodo
             today={today}
-            selected={todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate}
-            log={getLog(store, todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate)}
+            selected={todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate}
+            log={getLog(store, todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate)}
             onSelect={setTodoDate}
             onTitle={(id, title) =>
               update((current) =>
                 setChecklistTitle(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                   id,
                   title,
                 ),
@@ -395,7 +396,7 @@ function DayScreen({
               update((current) =>
                 toggleChecklistItem(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                   id,
                 ),
               )
@@ -404,7 +405,7 @@ function DayScreen({
               update((current) =>
                 addChecklistItem(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                 ),
               )
             }
@@ -412,7 +413,7 @@ function DayScreen({
               update((current) =>
                 deleteChecklistItem(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                   id,
                 ),
               )
@@ -421,7 +422,7 @@ function DayScreen({
               update((current) =>
                 moveChecklistItem(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                   id,
                   direction,
                 ),
@@ -453,7 +454,6 @@ function DayScreen({
             size="icon-lg"
             className="size-11"
             aria-label="後一天"
-            disabled={selected >= today}
             onClick={() => setSelected(addDays(selected, 1))}
           >
             <ChevronRight />
@@ -475,7 +475,7 @@ function DayScreen({
             days={store.days}
             log={log}
             periodStart={store.periodStart}
-            onSelect={(date) => setSelected(date > today ? today : date)}
+            onSelect={setSelected}
             onFocusRoutine={(id) => {
               document.getElementById(`routine-${id}`)?.scrollIntoView({
                 behavior: "smooth",
@@ -553,12 +553,12 @@ function DayScreen({
         <section className="mt-10 border-t border-black/5 pt-4" aria-label="Memo">
           <h2 className="text-sm font-medium">Memo</h2>
           <MemoField
-            value={store.journal[todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate] ?? ""}
+            value={store.journal[todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate] ?? ""}
             onChange={(value) =>
               update((current) =>
                 setJournal(
                   current,
-                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate > today ? today : todoDate,
+                  todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate,
                   value,
                 ),
               )

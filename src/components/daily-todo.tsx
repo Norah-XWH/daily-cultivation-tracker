@@ -76,7 +76,6 @@ export function DailyTodo({
           size="icon-lg"
           className="size-11 border-[#cecebf] bg-[#cecebf] text-[#0D0D0D] hover:bg-[#cecebf]"
           aria-label="後一天的待辦"
-          disabled={selected >= today}
           onClick={() => onSelect(addDays(selected, 1))}
         >
           <ChevronRight />
