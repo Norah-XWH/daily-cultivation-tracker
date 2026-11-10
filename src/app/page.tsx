@@ -1,5 +1,5 @@
-import { RikeApp } from "@/components/rike-app"
+import { MyDay } from "@/components/my-day"
 
 export default function Page() {
-  return <RikeApp />
+  return <MyDay />
 }

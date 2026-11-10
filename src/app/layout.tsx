@@ -22,12 +22,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://daily.zhengnian.win"),
-  title: "Daily Cultivation Tracker",
-  description: "Align thoughts, conduct, and habits with 真-善-忍",
-  applicationName: "Daily Cultivation Tracker",
+  title: "My Day",
+  description: "Countdown · 農曆 · Today's to-dos",
+  applicationName: "My Day",
   appleWebApp: {
     capable: true,
-    title: "Daily Cultivation Tracker",
+    title: "My Day",
   },
   icons: {
     icon: [
