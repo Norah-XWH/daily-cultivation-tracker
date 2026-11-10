@@ -279,7 +279,7 @@ export function MyDay() {
 
         {/* ── Countdown card ── */}
         <div className="mb-5 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/5">
-          <p className="text-xs font-medium tracking-widest text-[#8a9e9b] uppercase">距 2028 · 7 · 1</p>
+          <p className="text-xs font-medium tracking-widest text-[#8a9e9b] uppercase">距 2027 · 12 · 31</p>
           {cd && !cd.past ? (
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-4xl font-bold tabular-nums text-[#1a1a1a]">{cd.days}</span>

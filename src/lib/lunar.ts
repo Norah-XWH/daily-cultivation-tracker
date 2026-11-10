@@ -34,7 +34,7 @@ export type Countdown = {
   past: boolean
 }
 
-const TARGET = new Date(2028, 6, 1) // July 1, 2028
+const TARGET = new Date(2027, 11, 31) // December 31, 2027
 
 export function countdownToJul2028(now: Date): Countdown {
   const diff = TARGET.getTime() - now.getTime()
