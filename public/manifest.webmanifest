@@ -1,0 +1,10 @@
+{
+  "name": "My Day",
+  "short_name": "My Day",
+  "description": "Countdown · 農曆 · Today's to-dos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f4ef",
+  "theme_color": "#f5f4ef",
+  "icons": []
+}

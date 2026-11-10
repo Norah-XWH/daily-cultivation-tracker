@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5f4ef;
+  --foreground: #1a1a1a;
+}
+
+html, body {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.55);
+  }
+  28% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
