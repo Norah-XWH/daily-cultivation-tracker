@@ -114,6 +114,7 @@ export type CheckItem = {
   id: string
   title: string
   done: boolean
+  sourceId?: string
 }
 
 export type DayLog = {

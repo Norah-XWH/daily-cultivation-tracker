@@ -1,4 +1,4 @@
-import { parseClock } from "@/lib/dates"
+import { addDays, parseClock } from "@/lib/dates"
 import type {
   CheckItem,
   ColorId,
@@ -367,6 +367,65 @@ export function moveChecklistItem(store: Store, date: string, id: string, direct
     next[target] = current
     return next
   })
+}
+
+function defaultChecklist(date: string): CheckItem[] {
+  return Array.from({ length: CHECKLIST_SLOTS }, (_, i) => ({
+    id: `todo-${date}-${i + 1}`,
+    title: "",
+    done: false,
+  }))
+}
+
+export function carryForwardChecklist(store: Store, today: string): Store {
+  if (today < CHECKLIST_START) return store
+
+  let result = store
+
+  // Look back up to 60 days to handle gaps in app usage
+  const start = (() => {
+    const candidate = addDays(today, -60)
+    return candidate < CHECKLIST_START ? CHECKLIST_START : candidate
+  })()
+
+  let current = start
+  while (current < today) {
+    const next = addDays(current, 1)
+    const currentLog = result.days[current]
+
+    if (currentLog?.checklist) {
+      const undone = currentLog.checklist.filter(
+        (item) => !item.done && item.title.trim().length > 0,
+      )
+
+      if (undone.length > 0) {
+        const nextLog = result.days[next]
+        const nextChecklist: CheckItem[] = nextLog?.checklist ?? defaultChecklist(next)
+
+        // Build a set of sourceIds already in next day to avoid duplicates
+        const present = new Set(nextChecklist.map((item) => item.sourceId ?? item.id))
+
+        const toCarry = undone.filter((item) => !present.has(item.sourceId ?? item.id))
+
+        if (toCarry.length > 0) {
+          const carried: CheckItem[] = toCarry.map((item) => ({
+            id: uid(),
+            title: item.title,
+            done: false,
+            sourceId: item.sourceId ?? item.id,
+          }))
+          result = writeDay(result, next, (log) => ({
+            ...log,
+            checklist: [...(log.checklist ?? defaultChecklist(next)), ...carried],
+          }))
+        }
+      }
+    }
+
+    current = next
+  }
+
+  return result
 }
 
 export function setJournal(store: Store, date: string, note: string): Store {

@@ -27,6 +27,7 @@ import {
   addProjectLink,
   addProjectStep,
   blankRoutine,
+  carryForwardChecklist,
   CHECKLIST_START,
   createDefaultStore,
   deleteChecklistItem,
@@ -91,6 +92,7 @@ export function RikeApp() {
   const [importError, setImportError] = useState<string | null>(null)
   const [pendingImport, setPendingImport] = useState<Store | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const lastCarryDate = useRef<string | null>(null)
 
   function write(next: Store) {
     try {
@@ -102,6 +104,18 @@ export function RikeApp() {
     snapshot = { ready: true, store: next, unreadable: false }
     emit()
   }
+
+  // Run carry-forward once per day: when session loads and whenever today changes
+  useEffect(() => {
+    if (!session.ready) return
+    const today = todayKey()
+    if (lastCarryDate.current === today) return
+    lastCarryDate.current = today
+    const next = carryForwardChecklist(session.store, today)
+    if (next !== session.store) write(next)
+  // write is defined in this component and stable; todayKey() is deterministic
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
 
   function pickFile() {
     fileRef.current?.click()
@@ -379,6 +393,7 @@ function DayScreen({
         ) : view === "todo" ? (
           <DailyTodo
             today={today}
+            now={now}
             selected={todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate}
             log={getLog(store, todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate)}
             onSelect={setTodoDate}
