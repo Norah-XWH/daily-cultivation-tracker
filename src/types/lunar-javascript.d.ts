@@ -6,6 +6,8 @@ declare module "lunar-javascript" {
     getMonthInChinese(): string
     getDayInChinese(): string
     getYearInChinese(): string
+    getYearShengXiao(): string
+    getYearInGanZhi(): string
   }
 
   interface SolarDate {

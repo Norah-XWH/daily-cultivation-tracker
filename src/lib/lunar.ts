@@ -1,5 +1,12 @@
 import { Solar } from "lunar-javascript"
 
+// Simplified → Traditional for the 12 zodiac animals
+const ZODIAC_TRAD: Record<string, string> = {
+  鼠: "鼠", 牛: "牛", 虎: "虎", 兔: "兔",
+  龙: "龍", 蛇: "蛇", 马: "馬", 羊: "羊",
+  猴: "猴", 鸡: "雞", 狗: "狗", 猪: "豬",
+}
+
 export function getLunarDateString(key: string): string {
   const [yearStr, monthStr, dayStr] = key.split("-")
   const year = Number(yearStr)
@@ -10,10 +17,11 @@ export function getLunarDateString(key: string): string {
   try {
     const solar = Solar.fromYmd(year, month, day)
     const lunar = solar.getLunar()
-    // getMonth() returns negative for leap months (e.g. -6 for 閏六月)
     const monthCn = lunar.getMonthInChinese().replace("闰", "閏")
     const dayCn = lunar.getDayInChinese()
-    return `${monthCn}月${dayCn}`
+    const animalSimp = lunar.getYearShengXiao() as string
+    const animal = ZODIAC_TRAD[animalSimp] ?? animalSimp
+    return `${monthCn}月${dayCn} · ${animal}年`
   } catch {
     return ""
   }
