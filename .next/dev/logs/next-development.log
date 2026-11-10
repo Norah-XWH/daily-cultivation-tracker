@@ -1,0 +1,3 @@
+{"timestamp":"00:00:00.733","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:00.733","source":"Server","level":"LOG","message":"✓ Generated AGENTS.md for AI agents. Set `agentRules: false` in next.config to disable."}
+{"timestamp":"00:00:01.858","source":"Server","level":"WARN","message":"⚠ Your version of Next.js is affected by a known security vulnerability. This command is continuing after the upgrade reminder.\nReference: https://registry.npmjs.org/-/npm/v1/security/advisories/bulk"}
