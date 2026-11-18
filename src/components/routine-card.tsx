@@ -5,7 +5,7 @@ import { Circle } from "@/components/circle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { formatClockRange } from "@/lib/dates"
+import { fznLosAngelesOrder, formatClockRange, formatFznLosAngelesWindow } from "@/lib/dates"
 import { countedParts, partDone, ratingValues, routineDone, routineRating } from "@/lib/score"
 import { MAX_RATING_GROUPS, RATING_GROUPS, snapRating } from "@/lib/store"
 import { getColor } from "@/lib/types"
@@ -299,7 +299,10 @@ function ComplexBody({
         ) : null}
       </header>
       <div className="mt-1 flex flex-col gap-2">
-        {routine.parts.map((part) =>
+        {(routine.id === "fzn"
+          ? [...routine.parts].sort((a, b) => fznLosAngelesOrder(a.id) - fznLosAngelesOrder(b.id))
+          : routine.parts
+        ).map((part) =>
           part.choices && part.choices.length > 0 ? (
             <ChoiceRow key={part.id} part={part} log={log} ink={ink} onMinutes={onMinutes} />
           ) : part.kind === "minutes" ? (
@@ -325,7 +328,9 @@ function CheckRow({
   onToggle: (partId: string) => void
 }) {
   const on = Boolean(log.checks[part.id])
-  const range = part.start && part.end ? formatClockRange(part.start, part.end) : ""
+  const range =
+    formatFznLosAngelesWindow(part.id) ||
+    (part.start && part.end ? formatClockRange(part.start, part.end) : "")
   return (
     <button
       type="button"
@@ -338,7 +343,7 @@ function CheckRow({
       <span className="min-w-0 flex-1">
         <span className="block font-medium tabular-nums">{range || part.label}</span>
         {part.caption ? <span className="block text-sm text-ink-soft">{part.caption}</span> : null}
-        {range ? <span className="block text-sm text-ink-soft">{part.label}</span> : null}
+        {range && part.label ? <span className="block text-sm text-ink-soft">{part.label}</span> : null}
       </span>
       <Circle on={on} ink={ink} />
     </button>

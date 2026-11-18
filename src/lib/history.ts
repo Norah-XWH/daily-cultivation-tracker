@@ -131,8 +131,16 @@ export function buildHistory(
   days: Record<string, DayLog>,
   today: string,
   span: HistorySpan,
+  range?: { start: string; end: string },
 ): HistoryReport {
-  const dates = spanDates(today, span, days)
+  const dates =
+    range && DATE_KEY.test(range.start) && DATE_KEY.test(range.end)
+      ? datesThrough(
+          range.start <= range.end ? range.start : range.end,
+          range.start <= range.end ? range.end : range.start,
+          MAX_DAYS,
+        )
+      : spanDates(today, span, days)
   const points = dates.map((date) => pointFor(date, today, routines, days))
   const todayLog = days[today]
   const todayPoint = points.find((point) => point.date === today)

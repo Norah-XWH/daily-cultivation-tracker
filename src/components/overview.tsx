@@ -1,6 +1,6 @@
 "use client"
 
-import { formatEnglishDate, formatLong, formatMonthDay, parseKey, recentDates } from "@/lib/dates"
+import { formatEnglishDate, formatMonthDay } from "@/lib/dates"
 import {
   dayScore,
   hasActivity,
@@ -10,10 +10,8 @@ import {
   scoredRoutines,
   completionStreak,
 } from "@/lib/score"
-import { emptyLog } from "@/lib/store"
 import { getColor } from "@/lib/types"
 import type { DayLog, Routine } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 type OverviewProps = {
   today: string
@@ -33,7 +31,6 @@ export function Overview({
   days,
   log,
   periodStart,
-  onSelect,
   onFocusRoutine,
 }: OverviewProps) {
   const required = scoredRoutines(routines)
@@ -45,25 +42,6 @@ export function Overview({
   const dayLabel = selected === today ? "今天" : formatMonthDay(selected)
 
   const inPeriod = (date: string) => periodStart == null || date >= periodStart
-  const week = recentDates(today, 7).map((date) => {
-    const dayLog = days[date]
-    const recorded =
-      inPeriod(date) &&
-      required.length > 0 &&
-      (date === today || (dayLog != null && hasActivity(dayLog)))
-    return {
-      date,
-      score: recorded ? dayScore(routines, dayLog ?? emptyLog()) : null,
-    }
-  })
-  const counted = week.filter((day) => day.score != null)
-  const average =
-    counted.length === 0
-      ? null
-      : counted.reduce((sum, day) => sum + (day.score ?? 0), 0) / counted.length
-  const perfect = week.filter(
-    (day) => inPeriod(day.date) && isCompleteDay(routines, days[day.date]),
-  ).length
   const todayComplete = inPeriod(today) && isCompleteDay(routines, days[today])
   const streak = completionStreak(
     (date) => inPeriod(date) && isCompleteDay(routines, days[date]),
@@ -88,15 +66,9 @@ export function Overview({
       aria-label="完成度"
       className="rounded-3xl bg-white/55 px-4 py-4 ring-1 ring-black/5"
     >
-      <p className="text-sm text-ink-soft">
-        {selected === today ? (
-          <>
-            今天 <span>Today</span>
-          </>
-        ) : (
-          formatMonthDay(selected)
-        )}
-      </p>
+      {selected === today ? null : (
+        <p className="text-sm text-ink-soft">{formatMonthDay(selected)}</p>
+      )}
       <p
         data-testid="today-percent"
         aria-live="polite"
@@ -104,7 +76,9 @@ export function Overview({
       >
         {required.length === 0 || !recorded ? "—" : `${percent}%`}
       </p>
-      <p className="mt-1 text-base">{headline}</p>
+      {headline === "今天的完成度" || headline === "今天還沒開始" ? null : (
+        <p className="mt-1 text-base">{headline}</p>
+      )}
       {checks.length > 0 && recorded ? (
         <p className="mt-1 text-sm text-ink-soft tabular-nums">
           {doneCount}/{checks.length} 項完成
@@ -146,65 +120,18 @@ export function Overview({
         </div>
       ) : null}
 
-      <div className="mt-5 border-t border-black/5 pt-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-medium">
-            近 7 天 <span className="font-normal text-ink-soft">Last 7 days</span>
-          </h2>
-          {average != null ? (
-            <p className="text-sm text-ink-soft tabular-nums">
-              平均 {Math.round(average * 100)}% · 全勤 {perfect} 天
+      {periodStart || streak > 0 ? (
+        <div className="mt-5 border-t border-black/5 pt-4">
+          {periodStart ? (
+            <p className="text-sm text-[#123e3a]">This period starts {formatEnglishDate(periodStart)}</p>
+          ) : null}
+          {streak > 0 ? (
+            <p className={periodStart ? "mt-3 text-sm text-[#123e3a]" : "text-sm text-[#123e3a]"}>
+              連續全勤 {streak} 天{todayComplete ? "" : "，今天還沒完成"}
             </p>
           ) : null}
         </div>
-        <div className="mt-3 grid grid-cols-7 gap-2">
-          {week.map((day) => {
-            const height = day.score == null ? 0 : Math.round(day.score * 100)
-            return (
-              <button
-                key={day.date}
-                type="button"
-                className="flex flex-col items-center gap-1"
-                aria-pressed={day.date === selected}
-                aria-label={`${formatLong(day.date)}，${day.score == null ? "沒有記錄" : `完成度 ${height}%`}`}
-                onClick={() => onSelect(day.date)}
-              >
-                <span
-                  className={cn(
-                    "relative h-12 w-full overflow-hidden rounded-full bg-black/5",
-                    day.date === selected && "ring-2 ring-[#123e3a]",
-                  )}
-                >
-                  <span
-                    className="absolute inset-x-0 bottom-0 rounded-full motion-safe:transition-[height]"
-                    style={{
-                      height: `${height}%`,
-                      background:
-                        height >= 100 ? getColor("moss").ink : "color-mix(in srgb, #26867b 72%, transparent)",
-                    }}
-                  />
-                </span>
-                <span
-                  className={cn(
-                    "text-xs tabular-nums text-ink-soft",
-                    day.date === today && "font-medium text-[#123e3a]",
-                  )}
-                >
-                  {parseKey(day.date).getDate()}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-        {periodStart ? (
-          <p className="mt-3 text-sm text-[#123e3a]">This period starts {formatEnglishDate(periodStart)}</p>
-        ) : null}
-        {streak > 0 ? (
-          <p className="mt-3 text-sm text-[#123e3a]">
-            連續全勤 {streak} 天{todayComplete ? "" : "，今天還沒完成"}
-          </p>
-        ) : null}
-      </div>
+      ) : null}
     </section>
   )
 }

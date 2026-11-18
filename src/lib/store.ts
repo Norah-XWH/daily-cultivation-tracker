@@ -1,4 +1,4 @@
-import { parseClock } from "@/lib/dates"
+import { addDays, parseClock } from "@/lib/dates"
 import type {
   CheckItem,
   ColorId,
@@ -103,7 +103,18 @@ function exercise(index: number): Routine {
   const meditation = index === 5
   return {
     id: `exercise-${index}`,
-    name: meditation ? "Exercise 5: meditation" : `Exercise ${index}`,
+    name:
+      meditation
+        ? "神通加持法"
+        : index === 1
+          ? "佛展千手法"
+          : index === 2
+            ? "法輪樁法"
+            : index === 3
+              ? "貫通兩極法"
+              : index === 4
+                ? "法輪周天法"
+                : `Exercise ${index}`,
     detail: "",
     color: meditation ? "iris" : "moss",
     required: true,
@@ -141,7 +152,7 @@ export function createDefaultStore(): Store {
       exercise(5),
       {
         id: "fzn",
-        name: "FZN",
+        name: "發正念",
         detail: "",
         color: "amber",
         required: true,
@@ -149,21 +160,21 @@ export function createDefaultStore(): Store {
         mode: "tasks",
         order: 5,
         parts: [
-          slot("fzn-1", "凌晨", "02:55", "03:10"),
-          slot("fzn-2", "上午", "08:55", "09:10"),
-          slot("fzn-3", "下午", "14:55", "15:10"),
-          slot("fzn-4", "晚上", "20:55", "21:10"),
+          slot("fzn-1", "", "02:55", "03:10"),
+          slot("fzn-2", "", "08:55", "09:10"),
+          slot("fzn-3", "", "14:55", "15:10"),
+          slot("fzn-4", "", "20:55", "21:10"),
         ],
       },
       {
         id: "read-fa",
-        name: "Read FA",
+        name: "學法",
         detail: "",
         color: "sea",
         required: true,
         completion: "any",
         mode: "tasks",
-        order: 6,
+        order: -1,
         parts: [
           checkPart("fa-lecture", "轉法輪", "1 Lecture"),
           checkPart("fa-hour", "各地講法", "約 1 小時"),
@@ -182,8 +193,14 @@ export function emptyProject(): Project {
   return { note: "", links: [], files: [], steps: [], hours: {}, bankMinutes: 0 }
 }
 
-export function startNewPeriod(store: Store, today: string): Store {
-  return { ...store, periodStart: today }
+export function startNewPeriod(store: Store, _today: string): Store {
+  const days: Record<string, DayLog> = {}
+  for (const [date, log] of Object.entries(store.days)) {
+    const checklist = log.checklist?.filter((item) => item.title.trim() || item.done)
+    if (!checklist || checklist.length === 0) continue
+    days[date] = { ...emptyLog(), checklist }
+  }
+  return { ...store, days, periodStart: null }
 }
 
 export function blankRoutine(order: number): Routine {
@@ -352,6 +369,73 @@ export function addChecklistItem(store: Store, date: string): Store {
 
 export function deleteChecklistItem(store: Store, date: string, id: string): Store {
   return withChecklist(store, date, (items) => items.filter((item) => item.id !== id))
+}
+
+function sameChecklist(left: CheckItem[], right: CheckItem[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((item, index) => {
+      const other = right[index]
+      return !!other && item.id === other.id && item.title === other.title && item.done === other.done
+    })
+  )
+}
+
+function copyUndoneChecklist(store: Store, fromDate: string, toDate: string): Store {
+  if (fromDate < CHECKLIST_START || toDate < CHECKLIST_START) return store
+  const source = getLog(store, fromDate).checklist ?? []
+  const pending = source.filter((item) => !item.done && item.title.trim())
+  const doneTitles = new Set(
+    source.filter((item) => item.done && item.title.trim()).map((item) => item.title.trim()),
+  )
+  const destLog = getLog(store, toDate)
+  const saved = destLog.checklist
+  const dest = saved ?? checklistFor(toDate, destLog) ?? []
+  const present = new Set(dest.map((item) => item.title.trim()).filter(Boolean))
+  let next = dest.map((item) => ({ ...item }))
+  let changed = false
+  for (const item of pending) {
+    const title = item.title.trim()
+    if (present.has(title)) continue
+    const blank = next.findIndex((entry) => !entry.title.trim() && !entry.done)
+    if (blank >= 0) {
+      const current = next[blank]
+      if (!current) continue
+      next[blank] = { ...current, title: item.title }
+    } else {
+      next.push({ id: uid(), title: item.title, done: false })
+    }
+    present.add(title)
+    changed = true
+  }
+  const kept = next.filter((item) => {
+    const title = item.title.trim()
+    return !title || item.done || !doneTitles.has(title)
+  })
+  if (kept.length !== next.length) {
+    next = kept
+    changed = true
+  }
+  if (!changed) return store
+  if (saved && sameChecklist(saved, next)) return store
+  return writeDay(store, toDate, (log) => ({ ...log, checklist: next }))
+}
+
+export function carryUndoneTodos(store: Store, today: string): Store {
+  if (today < CHECKLIST_START) return store
+  let next = store
+  if (!next.days[today]?.checklist) {
+    let source = addDays(today, -1)
+    while (source >= CHECKLIST_START && !next.days[source]?.checklist) source = addDays(source, -1)
+    if (source >= CHECKLIST_START && next.days[source]?.checklist) {
+      let day = addDays(source, 1)
+      while (day <= today) {
+        if (!next.days[day]?.checklist) next = copyUndoneChecklist(next, addDays(day, -1), day)
+        day = addDays(day, 1)
+      }
+    }
+  }
+  return copyUndoneChecklist(next, today, addDays(today, 1))
 }
 
 export function moveChecklistItem(store: Store, date: string, id: string, direction: -1 | 1): Store {
@@ -921,6 +1005,25 @@ function visibleCaption(caption: string | null, fallback: string, hidden: string
 
 function applyBuiltInShape(routines: Routine[], days: Record<string, DayLog>) {
   for (const routine of routines) {
+    if (routine.id === "exercise-1" && (routine.name === "Exercise 1" || routine.name === "佛展千手")) {
+      routine.name = "佛展千手法"
+    }
+    if (routine.id === "exercise-2" && routine.name === "Exercise 2") routine.name = "法輪樁法"
+    if (routine.id === "exercise-3" && routine.name === "Exercise 3") routine.name = "貫通兩極法"
+    if (routine.id === "exercise-4" && routine.name === "Exercise 4") routine.name = "法輪周天法"
+    if (
+      routine.id === "exercise-5" &&
+      (routine.name === "Exercise 5: meditation" || routine.name === "Exercise 5")
+    ) {
+      routine.name = "神通加持法"
+    }
+    if (routine.id === "fzn" && routine.name === "FZN") routine.name = "發正念"
+    if (routine.id === "fzn") {
+      const timeLabels = new Set(["凌晨", "上午", "下午", "晚上"])
+      routine.parts = routine.parts.map((part) =>
+        timeLabels.has(part.label) ? { ...part, label: "" } : part,
+      )
+    }
     if (
       routine.id === "exercise-2" &&
       routine.parts.length === 1 &&
@@ -932,6 +1035,11 @@ function applyBuiltInShape(routines: Routine[], days: Record<string, DayLog>) {
       routine.mode = "tasks"
     }
     if (routine.id !== "read-fa") continue
+    if (routine.name === "Read FA") routine.name = "學法"
+    const exerciseOrders = routines.filter((item) => /^exercise-[1-5]$/.test(item.id)).map((item) => item.order)
+    if (exerciseOrders.length > 0 && routine.order >= Math.min(...exerciseOrders)) {
+      routine.order = Math.min(...exerciseOrders) - 1
+    }
     routine.completion = "any"
     routine.parts = routine.parts.map((part) => {
       if (part.id === "fa-lecture") {

@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { formatEnglishDate, formatLong, formatMonthDay } from "@/lib/dates"
+import { Input } from "@/components/ui/input"
+import { addDays, formatEnglishDate, formatLong, formatMonthDay } from "@/lib/dates"
 import { buildHistory, type HistoryBucket, type HistoryPoint, type HistorySpan } from "@/lib/history"
 import { getColor } from "@/lib/types"
 import type { DayLog, Routine } from "@/lib/types"
@@ -166,23 +167,32 @@ export function PerformanceBars({
   days: Record<string, DayLog>
   today: string
 }) {
-  const [span, setSpan] = useState<HistorySpan>("30")
-  const report = buildHistory(routines, days, today, span)
+  const [start, setStart] = useState(() => addDays(today, -29))
+  const [end, setEnd] = useState(today)
+  const report = buildHistory(routines, days, today, "30", { start, end })
   return (
     <section className="mt-8" aria-label="一段時間">
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="選擇一段時間">
-        {SPANS.map((item) => (
-          <Button
-            key={item.id}
-            type="button"
-            variant={span === item.id ? "default" : "outline"}
-            className="h-11"
-            aria-pressed={span === item.id}
-            onClick={() => setSpan(item.id)}
-          >
-            {item.label}
-          </Button>
-        ))}
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          type="date"
+          value={start}
+          max={end}
+          aria-label="開始日期"
+          onValueChange={(value) => {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) setStart(value)
+          }}
+          className="h-11 min-w-0 bg-white/70 px-1.5"
+        />
+        <Input
+          type="date"
+          value={end}
+          min={start}
+          aria-label="結束日期"
+          onValueChange={(value) => {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) setEnd(value)
+          }}
+          className="h-11 min-w-0 bg-white/70 px-1.5"
+        />
       </div>
       <TrendChart
         points={report.points}
@@ -220,42 +230,37 @@ function TrendChart({
   const label = chartLabel(points)
 
   if (!dense) {
+    const plotted = points.map((point, index) => {
+      const percent = point.score == null ? 0 : point.score
+      const x = points.length <= 1 ? 50 : 6 + (index / (points.length - 1)) * 88
+      const y = 12 + (1 - percent) * 76
+      return { point, x, y, percent }
+    })
+    const line = plotted.map((dot, index) => `${index === 0 ? "M" : "L"}${dot.x.toFixed(2)},${dot.y.toFixed(2)}`).join(" ")
     return (
-      <div className="mt-4">
-        <div
-          className="grid h-24 gap-px"
-          style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}
-        >
-          {points.map((point) => {
-            const height = point.score == null ? 0 : Math.round(point.score * 100)
-            return (
-              <button
-                key={point.date}
-                type="button"
-                aria-pressed={point.date === selected}
-                aria-label={`${formatLong(point.date)}，${point.score == null ? "沒有記錄" : `完成度 ${height}%`}`}
-                  className={cn(
-                    "relative h-full overflow-hidden rounded-full bg-black/5",
-                    point.date === selected && "ring-1 ring-[#123e3a]",
-                  )}
-                onClick={() => onSelect(point.date)}
-              >
-                <span
-                  className="absolute inset-x-0 bottom-0 rounded-full"
-                  style={{
-                    height: point.score == null ? "0%" : `${Math.max(height, 4)}%`,
-                    background:
-                      height >= 100 ? getColor("moss").ink : "color-mix(in srgb, #26867b 72%, transparent)",
-                  }}
-                />
-              </button>
-            )
-          })}
-        </div>
-        <div className="mt-1 flex justify-between text-xs tabular-nums text-ink-soft">
-          <span>{formatMonthDay(points[0]?.date ?? "")}</span>
-          <span>{formatMonthDay(points[points.length - 1]?.date ?? "")}</span>
-        </div>
+      <div className="relative mt-4 h-24" role="img" aria-label={label}>
+        <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+          <path
+            d={line}
+            fill="none"
+            stroke="#26867b"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        {plotted.map(({ point, x, y, percent }) => {
+          const rate = Math.round(percent * 100)
+          const color = rate > 90 ? "#1f8a4c" : rate >= 76 ? "#2f6cb5" : "#c44747"
+          return (
+            <span
+              key={point.date}
+              className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ left: `${x}%`, top: `${y}%`, backgroundColor: color }}
+            />
+          )
+        })}
       </div>
     )
   }
@@ -296,10 +301,6 @@ function TrendChart({
           )}
           selected={selected}
         />
-      </div>
-      <div className="mt-1 flex justify-between text-xs tabular-nums text-ink-soft">
-        <span>{formatMonthDay(points[0]?.date ?? "")}</span>
-        <span>{formatMonthDay(points[points.length - 1]?.date ?? "")}</span>
       </div>
     </div>
   )

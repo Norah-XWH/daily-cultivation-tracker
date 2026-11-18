@@ -4,12 +4,11 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Circle } from "@/components/circle"
 import { Button } from "@/components/ui/button"
-import { addDays, formatLong } from "@/lib/dates"
+import { addDays, formatLong, formatLunarDate } from "@/lib/dates"
 import { CHECKLIST_START, checklistFor } from "@/lib/store"
 import type { CheckItem, DayLog } from "@/lib/types"
 
 type DailyTodoProps = {
-  today: string
   selected: string
   log: DayLog
   onSelect: (date: string) => void
@@ -21,7 +20,6 @@ type DailyTodoProps = {
 }
 
 export function DailyTodo({
-  today,
   selected,
   log,
   onSelect,
@@ -68,7 +66,7 @@ export function DailyTodo({
         </Button>
         <p className="min-w-0 flex-1 text-center text-base font-medium">
           {formatLong(selected)}
-          {selected === today ? " · 今天" : ""}
+          {formatLunarDate(selected) ? ` · ${formatLunarDate(selected)}` : ""}
         </p>
         <Button
           type="button"

@@ -75,11 +75,17 @@ export function routineDone(routine: Routine, log: DayLog): boolean {
   return routine.completion === "any" ? done.some(Boolean) : done.every(Boolean)
 }
 
+const SHARE_IDS = ["exercise-1", "exercise-2", "exercise-3", "exercise-4", "exercise-5", "fzn"]
+
 export function dayScore(routines: Routine[], log: DayLog): number {
-  const required = scoredRoutines(routines)
-  if (required.length === 0) return 0
-  const total = required.reduce((sum, routine) => sum + routineScore(routine, log), 0)
-  return total / required.length
+  const byId = new Map(scoredRoutines(routines).map((routine) => [routine.id, routine]))
+  const six = SHARE_IDS.reduce((sum, id) => {
+    const routine = byId.get(id)
+    return sum + (routine ? routineScore(routine, log) : 0)
+  }, 0)
+  const reading = byId.get("read-fa")
+  const readingScore = reading ? routineScore(reading, log) : 0
+  return (six + readingScore * 3) / 9
 }
 
 export function isCompleteDay(routines: Routine[], log: DayLog | undefined): boolean {

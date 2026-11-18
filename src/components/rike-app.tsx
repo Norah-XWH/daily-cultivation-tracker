@@ -6,8 +6,8 @@ import { DailyTodo } from "@/components/daily-todo"
 import { PerformanceBars } from "@/components/history-view"
 import { ReadmePage } from "@/components/readme-page"
 import { Overview } from "@/components/overview"
-import { ProjectBoard } from "@/components/project-board"
 import { RoutineCard } from "@/components/routine-card"
+import { SkillPage } from "@/components/skill-page"
 import { RoutineEditor } from "@/components/routine-editor"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -19,27 +19,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { addDays, formatLong, todayKey } from "@/lib/dates"
+import { addDays, formatLong, formatLunarDate, losAngelesDateKey, todayKey } from "@/lib/dates"
 import { sortRoutines } from "@/lib/score"
 import {
   addChecklistItem,
-  addProjectFile,
   addProjectLink,
-  addProjectStep,
   blankRoutine,
+  carryUndoneTodos,
   CHECKLIST_START,
   createDefaultStore,
   deleteChecklistItem,
   moveChecklistItem,
-  deleteProjectFile,
-  deleteProjectLink,
-  deleteProjectStep,
   deleteRoutine,
   getLog,
   addRatingGroup,
   setChecklistTitle,
   setJournal,
-  finishProjectTimer,
   setProjectNote,
   setRatingNote,
   moveRoutine,
@@ -51,7 +46,6 @@ import {
   STORAGE_KEY,
   toggleCheck,
   toggleChecklistItem,
-  toggleProjectStep,
   upsertRoutine,
 } from "@/lib/store"
 import type { Routine, Store } from "@/lib/types"
@@ -233,20 +227,35 @@ function DayScreen({
 }) {
   const [now, setNow] = useState(() => new Date())
   const today = todayKey(now)
+  const laToday = losAngelesDateKey(now)
   const [selected, setSelected] = useState(today)
   const editing = false
   const [draft, setDraft] = useState<Routine | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Routine | null>(null)
   const [view, setView] = useState<"day" | "readme" | "todo" | "project">("day")
-  const [todoDate, setTodoDate] = useState(today)
+  const [todoDate, setTodoDate] = useState(laToday)
   const [mottoPop, setMottoPop] = useState(true)
   const [periodOpen, setPeriodOpen] = useState(false)
   const [trackedToday, setTrackedToday] = useState(today)
+  const [trackedTodo, setTrackedTodo] = useState(laToday)
   if (trackedToday !== today) {
     setTrackedToday(today)
     setSelected((current) => (current === trackedToday ? today : current))
-    setTodoDate((current) => (current === trackedToday ? today : current))
   }
+  if (trackedTodo !== laToday) {
+    setTrackedTodo(laToday)
+    setTodoDate((current) => (current === trackedTodo ? laToday : current))
+  }
+
+  const storeRef = useRef(store)
+  const onChangeRef = useRef(onChange)
+  storeRef.current = store
+  onChangeRef.current = onChange
+  useEffect(() => {
+    const current = storeRef.current
+    const next = carryUndoneTodos(current, laToday)
+    if (next !== current) onChangeRef.current(next)
+  }, [laToday, todoDate])
 
   const shared = useRef(false)
   useEffect(() => {
@@ -322,29 +331,24 @@ function DayScreen({
         </button>
       ) : null}
       <div
-        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cover bg-center bg-no-repeat sm:my-0 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#f7f4ee]" : "bg-paper"}`}
-        style={view === "project" ? { backgroundImage: "url('/skill-background.png?v=2')" } : undefined}
+        className={`mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cover bg-center bg-no-repeat sm:my-0 ${view === "readme" || view === "project" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : "bg-paper"}`}
       >
       <main
-        className="min-h-0 flex-1 overflow-y-auto px-4"
+        className={`min-h-0 flex-1 px-4 ${view === "todo" || view === "project" ? "flex flex-col overflow-y-auto" : "overflow-y-auto"}`}
         style={{
           paddingTop: "max(0.75rem, env(safe-area-inset-top))",
           paddingBottom: "1.25rem",
         }}
       >
-        {view === "readme" || view === "project" ? null : (
+        {view === "day" ? (
         <header>
           <div
-            className={
-              view === "day"
-                ? `font-zhen mt-2 text-[1.2rem] leading-snug font-bold text-[#123e3a]${mottoPop ? " invisible" : ""}`
-                : "mt-1 text-[1.35rem] font-medium text-[#123e3a]"
-            }
+            className={`font-zhen mt-2 text-[1.2rem] leading-snug font-bold text-[#123e3a]${mottoPop ? " invisible" : ""}`}
           >
-            {view === "todo" ? "To-Do" : "「事事對照，做到是修。」"}
+            「事事對照，做到是修。」
           </div>
         </header>
-        )}
+        ) : null}
 
         {saveError ? (
           <p role="alert" className="mt-3 text-sm text-destructive">
@@ -358,27 +362,9 @@ function DayScreen({
         ) : null}
 
         {view === "project" ? (
-          <ProjectBoard
-            today={today}
-            project={store.project}
-            onFinish={(minutes) => update((current) => finishProjectTimer(current, today, minutes))}
-            onNote={(note) => update((current) => setProjectNote(current, note))}
-            onAddLink={(title, url) => {
-              const next = addProjectLink(store, title, url)
-              if (!next) return false
-              onChange(next)
-              return true
-            }}
-            onDeleteLink={(id) => update((current) => deleteProjectLink(current, id))}
-            onAddStep={(title, parentId) => update((current) => addProjectStep(current, title, parentId))}
-            onToggleStep={(id) => update((current) => toggleProjectStep(current, id))}
-            onDeleteStep={(id) => update((current) => deleteProjectStep(current, id))}
-            onAddFile={(file) => update((current) => addProjectFile(current, file))}
-            onDeleteFile={(id) => update((current) => deleteProjectFile(current, id))}
-          />
+          <SkillPage />
         ) : view === "todo" ? (
           <DailyTodo
-            today={today}
             selected={todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate}
             log={getLog(store, todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate)}
             onSelect={setTodoDate}
@@ -446,7 +432,7 @@ function DayScreen({
           </Button>
           <p className="min-w-0 flex-1 text-center text-base font-normal">
             {formatLong(selected)}
-            {selected === today ? " · 今天" : ""}
+            {selected === today && formatLunarDate(selected) ? ` · ${formatLunarDate(selected)}` : ""}
           </p>
           <Button
             type="button"
@@ -486,7 +472,6 @@ function DayScreen({
         </div>
 
         <section className="mt-8" aria-label="項目">
-          <h2 className="text-sm font-medium">項目</h2>
           {editing || routines.length === 0 ? (
             <Button type="button" variant="outline" className="mt-3 h-11 w-full" onClick={beginAdd}>
               加一項
@@ -542,7 +527,7 @@ function DayScreen({
             data-testid="start-period"
             onClick={() => setPeriodOpen(true)}
           >
-            Start Anew
+            從新開始
           </Button>
         </section>
         ) : null}
@@ -550,8 +535,8 @@ function DayScreen({
         {view === "day" ? (
           <PerformanceBars routines={store.routines} days={store.days} today={today} />
         ) : view === "todo" ? (
-        <section className="mt-10 border-t border-black/5 pt-4" aria-label="Memo">
-          <h2 className="text-sm font-medium">Memo</h2>
+        <section className="mt-10 flex min-h-0 flex-1 flex-col border-t border-black/5 pt-4" aria-label="Memo">
+          <h2 className="shrink-0 text-sm font-medium">Memo</h2>
           <MemoField
             value={store.journal[todoDate < CHECKLIST_START ? CHECKLIST_START : todoDate] ?? ""}
             onChange={(value) =>
@@ -565,7 +550,7 @@ function DayScreen({
             }
           />
         </section>
-        ) : view === "readme" ? null : (
+        ) : view === "readme" || view === "project" ? null : (
         <section className="mt-10 border-t border-black/5 pt-4" aria-label="日記">
           <h2 className="flex items-center gap-3 text-sm font-medium">
             <span>
@@ -584,15 +569,15 @@ function DayScreen({
         )}
       </main>
       <nav
-        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : view === "project" ? "bg-[#f7f4ee]/70" : "bg-[#f7fffd]"}`}
+        className={`grid shrink-0 grid-cols-4 border-t border-black/10 ${view === "readme" || view === "project" ? "bg-[#F5F2E8]" : view === "todo" ? "bg-[#EFEFEA]" : "bg-[#f7fffd]"}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="切換頁面"
       >
         {(
           [
-            ["day", "今天", CalendarDays],
-            ["readme", "ReadMe", BookOpen],
-            ["todo", "待辦", ListChecks],
+            ["day", "Today", CalendarDays],
+            ["readme", "I AM...", BookOpen],
+            ["todo", "To-do", ListChecks],
             ["project", "Skill", Timer],
           ] as const
         ).map(([id, label, Icon]) => {
@@ -643,10 +628,8 @@ function DayScreen({
       <Dialog open={periodOpen} onOpenChange={setPeriodOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Start Anew</DialogTitle>
-            <DialogDescription>
-              Earlier days stay in Over time. From today, the last 7 days and the streak start again.
-            </DialogDescription>
+            <DialogTitle>從新開始</DialogTitle>
+            <DialogDescription>每天的打卡和它的歷史會清掉。待辦、日記和 Skill 還在。</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button type="button" variant="outline" className="h-11" onClick={() => setPeriodOpen(false)}>
@@ -691,21 +674,12 @@ function DayScreen({
 }
 
 function MemoField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const ref = useRef<HTMLTextAreaElement>(null)
-  useEffect(() => {
-    const field = ref.current
-    if (!field) return
-    field.style.height = "0px"
-    field.style.height = `${field.scrollHeight}px`
-  }, [value])
   return (
     <textarea
-      ref={ref}
-      rows={1}
       value={value}
       aria-label="Memo"
       onChange={(event) => onChange(event.target.value)}
-      className="mt-3 min-h-16 w-full resize-none overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-[#cecebf] bg-[#EFEFEA] px-3 py-2 text-base leading-7 text-[#0D0D0D] outline-none"
+      className="mt-3 min-h-16 w-full flex-1 resize-none overflow-auto whitespace-pre-wrap break-words rounded-lg border border-[#cecebf] bg-[#EFEFEA] px-3 py-2 text-base leading-7 text-[#0D0D0D] outline-none"
     />
   )
 }
