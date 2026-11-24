@@ -385,8 +385,11 @@ function copyUndoneChecklist(store: Store, fromDate: string, toDate: string): St
   if (fromDate < CHECKLIST_START || toDate < CHECKLIST_START) return store
   const source = getLog(store, fromDate).checklist ?? []
   const pending = source.filter((item) => !item.done && item.title.trim())
+  const pendingTitles = new Set(pending.map((item) => item.title.trim()))
   const doneTitles = new Set(
-    source.filter((item) => item.done && item.title.trim()).map((item) => item.title.trim()),
+    source
+      .filter((item) => item.done && item.title.trim() && !pendingTitles.has(item.title.trim()))
+      .map((item) => item.title.trim()),
   )
   const destLog = getLog(store, toDate)
   const saved = destLog.checklist
@@ -410,7 +413,7 @@ function copyUndoneChecklist(store: Store, fromDate: string, toDate: string): St
   }
   const kept = next.filter((item) => {
     const title = item.title.trim()
-    return !title || item.done || !doneTitles.has(title)
+    return !title || !doneTitles.has(title)
   })
   if (kept.length !== next.length) {
     next = kept
@@ -435,6 +438,7 @@ export function carryUndoneTodos(store: Store, today: string): Store {
       }
     }
   }
+  next = copyUndoneChecklist(next, addDays(today, -1), today)
   return copyUndoneChecklist(next, today, addDays(today, 1))
 }
 
