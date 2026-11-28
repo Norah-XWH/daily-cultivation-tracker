@@ -105,6 +105,43 @@ test("built-in explanations are not kept on items", () => {
   assert.equal(next?.routines.find((routine) => routine.id === "fzn")?.detail, "凌晨记得做")
 })
 
+test("today percent uses the fixed practice weights", () => {
+  const store = createDefaultStore()
+  const shown = (log: ReturnType<typeof emptyLog>) => Math.round(dayScore(store.routines, log) * 100)
+  assert.equal(shown(emptyLog()), 0)
+  const reading = emptyLog()
+  reading.checks["fa-lecture"] = true
+  assert.equal(shown(reading), 30)
+  const hourOnly = emptyLog()
+  hourOnly.checks["fa-hour"] = true
+  assert.equal(shown(hourOnly), 30)
+  const threeSlots = emptyLog()
+  threeSlots.checks["fzn-1"] = true
+  threeSlots.checks["fzn-2"] = true
+  threeSlots.checks["fzn-3"] = true
+  assert.equal(shown(threeSlots), 23)
+  const fourSlots = emptyLog()
+  fourSlots.checks["fzn-1"] = true
+  fourSlots.checks["fzn-2"] = true
+  fourSlots.checks["fzn-3"] = true
+  fourSlots.checks["fzn-4"] = true
+  assert.equal(shown(fourSlots), 23)
+  const all = emptyLog()
+  all.checks["fa-lecture"] = true
+  all.checks["fzn-1"] = true
+  all.checks["fzn-2"] = true
+  all.checks["fzn-3"] = true
+  all.checks["exercise-1-done"] = true
+  all.checks["exercise-3-done"] = true
+  all.checks["exercise-4-done"] = true
+  all.checks["exercise-5-done"] = true
+  all.minutes["exercise-2-time"] = 60
+  assert.equal(shown(all), 100)
+  const otherMinutes = emptyLog()
+  otherMinutes.minutes["exercise-2-time"] = 45
+  assert.equal(shown(otherMinutes), 0)
+})
+
 test("scores partial work and either-or routines", () => {
   const store = createDefaultStore()
   const log = emptyLog()
@@ -114,7 +151,7 @@ test("scores partial work and either-or routines", () => {
   log.checks["fzn-2"] = true
   assert.equal(routineScore(fzn, log), 0.5)
   assert.equal(routineDone(fzn, log), false)
-  assert.equal(dayScore(store.routines, log), 0.5 / 7)
+  assert.equal(dayScore(store.routines, log), 140 / 900)
 
   const reading = store.routines.find((routine) => routine.id === "read-fa")
   assert.ok(reading)
@@ -183,7 +220,7 @@ test("optional routines stay out of the day score", () => {
   log.ratings.cultivate = [80]
   assert.equal(dayScore(routines, log), 0)
   log.checks["exercise-1-done"] = true
-  assert.equal(dayScore(routines, log), 1 / 7)
+  assert.equal(dayScore(routines, log), 35 / 900)
 })
 
 test("streak counts finished days and stops at a gap", () => {

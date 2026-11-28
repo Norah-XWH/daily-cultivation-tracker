@@ -12,13 +12,13 @@ test("history skips empty past days and still counts an empty today", () => {
 
   assert.equal(report.points.length, 30)
   assert.equal(report.points.find((point) => point.date === "2026-10-11")?.score, null)
-  assert.equal(report.points.find((point) => point.date === "2026-10-12")?.score, 1 / 7)
+  assert.equal(report.points.find((point) => point.date === "2026-10-12")?.score, 35 / 900)
   assert.equal(report.points.find((point) => point.date === today)?.score, 0)
   assert.equal(report.logged, 1)
   assert.equal(report.todayCountsEmpty, true)
   assert.equal(report.completeDays, 0)
   assert.equal(report.previous, null)
-  assert.equal(report.recent, (1 / 7) / 2)
+  assert.equal(report.recent, 35 / 1800)
 
   const exercise = report.routines.find((routine) => routine.id === "exercise-1")
   assert.equal(exercise?.samples, 2)
@@ -58,6 +58,6 @@ test("the latest week is compared with the week before it", () => {
     store = toggleCheck(store, date, "exercise-1-done")
   }
   const report = buildHistory(store.routines, store.days, today, "30")
-  assert.ok(Math.abs((report.previous ?? 0) - 1 / 7) < 1e-12)
-  assert.ok(Math.abs((report.recent ?? 0) - 6 / 49) < 1e-12)
+  assert.ok(Math.abs((report.previous ?? 0) - 35 / 900) < 1e-10)
+  assert.ok(Math.abs((report.recent ?? 0) - 1 / 30) < 1e-10)
 })

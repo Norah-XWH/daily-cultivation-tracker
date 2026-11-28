@@ -75,17 +75,47 @@ export function routineDone(routine: Routine, log: DayLog): boolean {
   return routine.completion === "any" ? done.some(Boolean) : done.every(Boolean)
 }
 
-const SHARE_IDS = ["exercise-1", "exercise-2", "exercise-3", "exercise-4", "exercise-5", "fzn"]
+// Points are ninths of one percent: 900 ninths = 100. The screen rounds ninths / 9.
+function practiceNinths(routine: Routine, log: DayLog): number | null {
+  const name = routine.name
+  if (routine.id === "read-fa" || name === "學法" || name === "Read FA") {
+    return routine.parts.some((part) => partDone(part, log)) ? 270 : 0
+  }
+  if (routine.id === "fzn" || name === "發正念" || name === "FZN") {
+    const slots = routine.parts.filter((part) => partDone(part, log)).length
+    return 70 * Math.min(slots, 3)
+  }
+  if (routine.id === "exercise-5" || name === "神通加持法") {
+    return routineDone(routine, log) ? 210 : 0
+  }
+  if (
+    routine.id === "exercise-1" ||
+    name === "佛展千手法" ||
+    routine.id === "exercise-3" ||
+    name === "貫通兩極法" ||
+    routine.id === "exercise-4" ||
+    name === "法輪周天法"
+  ) {
+    return routineDone(routine, log) ? 35 : 0
+  }
+  if (routine.id === "exercise-2" || name === "法輪樁法") {
+    const chosen = routine.parts.some((part) => {
+      const minutes = log.minutes[part.id] ?? 0
+      return minutes === 30 || minutes === 60
+    })
+    return chosen ? 105 : 0
+  }
+  return null
+}
 
 export function dayScore(routines: Routine[], log: DayLog): number {
-  const byId = new Map(scoredRoutines(routines).map((routine) => [routine.id, routine]))
-  const six = SHARE_IDS.reduce((sum, id) => {
-    const routine = byId.get(id)
-    return sum + (routine ? routineScore(routine, log) : 0)
-  }, 0)
-  const reading = byId.get("read-fa")
-  const readingScore = reading ? routineScore(reading, log) : 0
-  return (six + readingScore * 3) / 9
+  let ninths = 0
+  for (const routine of routines) {
+    const points = practiceNinths(routine, log)
+    if (points == null) continue
+    ninths += points
+  }
+  return ninths / 900
 }
 
 export function isCompleteDay(routines: Routine[], log: DayLog | undefined): boolean {
